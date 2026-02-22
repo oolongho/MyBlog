@@ -1,0 +1,61 @@
+:root {
+  --color-primary: #00cc66;
+  --color-primary-dark: #00b85c;
+  --color-primary-light: #00ff66;
+  --color-primary-rgb: 0, 204, 102;
+  
+  --color-accent: #00cc66;
+  --color-accent-dark: #00b85c;
+  
+  --bg-light: #eeeeee;
+  --bg-dark: #202020;
+  
+  --card-bg-light: #ffffff;
+  --card-bg-dark: #2a2a2a;
+  
+  --text-primary-light: #1a1a1a;
+  --text-primary-dark: #f0f0f0;
+  
+  --text-secondary-light: #666666;
+  --text-secondary-dark: #aaaaaa;
+  
+  --border-light: #e0e0e0;
+  --border-dark: #3a3a3a;
+  
+  --shadow-light: rgba(0, 0, 0, 0.08);
+  --shadow-dark: rgba(0, 0, 0, 0.3);
+  
+  --gradient-primary: linear-gradient(135deg, #00cc66 0%, #00ff66 100%);
+  --gradient-header: linear-gradient(135deg, #00cc66 0%, #00dd66 50%, #00ff66 100%);
+  
+  --transition-fast: 0.2s ease;
+  --transition-normal: 0.3s ease;
+  --transition-slow: 0.5s ease;
+  
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+  --radius-2xl: 2rem;
+}
+
+[data-theme="light"] {
+  --bg-main: var(--bg-light);
+  --card-bg: var(--card-bg-light);
+  --text-primary: var(--text-primary-light);
+  --text-secondary: var(--text-secondary-light);
+  --border-color: var(--border-light);
+  --shadow-color: var(--shadow-light);
+  --glass-bg: rgba(255, 255, 255, 0.8);
+  --glass-border: rgba(0, 204, 102, 0.2);
+}
+[data-theme="dark"] {
+  --bg-main: var(--bg-dark);
+  --card-bg: var(--card-bg-dark);
+  --text-primary: var(--text-primary-dark);
+  --text-secondary: var(--text-secondary-dark);
+  --border-color: var(--border-dark);
+  --shadow-color: var(--shadow-dark);
+  --glass-bg: rgba(42, 42, 42, 0.8);
+  --glass-border: rgba(0, 204, 102, 0.3);
+}
