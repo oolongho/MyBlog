@@ -1,0 +1,163 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ==================== 用户系统 ====================
+
+model Admin {
+  id        Int      @id @default(autoincrement())
+  username  String   @unique
+  password  String
+  nickname  String
+  avatar    String?
+  email     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  articles Article[]
+  moments  Moment[]
+}
+
+model Visitor {
+  id          Int       @id @default(autoincrement())
+  nickname    String
+  email       String    @unique
+  password    String?
+  avatar      String?
+  provider    String    @default("local")
+  providerId  String?
+  lastLoginAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  comments Comment[]
+  likes    Like[]
+
+  @@index([email])
+  @@index([provider, providerId])
+}
+
+// ==================== 内容系统 ====================
+
+model Article {
+  id        Int      @id @default(autoincrement())
+  title     String
+  excerpt   String
+  content   String
+  cover     String?
+  category  String
+  views     Int      @default(0)
+  status    Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  authorId Int
+  author   Admin  @relation(fields: [authorId], references: [id])
+  tags     ArticleTag[]
+  comments Comment[]
+
+  @@index([category])
+  @@index([status, createdAt])
+}
+
+model ArticleTag {
+  id       Int       @id @default(autoincrement())
+  name     String    @unique
+  articles Article[]
+}
+
+model Moment {
+  id        Int      @id @default(autoincrement())
+  content   String
+  images    String
+  likes     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  authorId Int
+  author   Admin @relation(fields: [authorId], references: [id])
+  comments Comment[]
+  likeRecords Like[]
+
+  @@index([createdAt])
+}
+
+model GalleryImage {
+  id          Int      @id @default(autoincrement())
+  url         String
+  thumbnail   String?
+  title       String
+  description String?
+  category    String
+  createdAt   DateTime @default(now())
+
+  tags ImageTag[]
+
+  @@index([category])
+}
+
+model ImageTag {
+  id     Int           @id @default(autoincrement())
+  name   String        @unique
+  images GalleryImage[]
+}
+
+// ==================== 互动系统 ====================
+
+model FriendLink {
+  id          Int      @id @default(autoincrement())
+  name        String
+  avatar      String
+  url         String
+  description String
+  status      Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  @@index([status])
+}
+
+model Comment {
+  id        Int      @id @default(autoincrement())
+  content   String
+  createdAt DateTime @default(now())
+
+  visitorId Int
+  visitor   Visitor @relation(fields: [visitorId], references: [id])
+
+  articleId Int?
+  article   Article? @relation(fields: [articleId], references: [id])
+  momentId  Int?
+  moment    Moment? @relation(fields: [momentId], references: [id])
+
+  parentId Int?
+  parent   Comment?  @relation("CommentReplies", fields: [parentId], references: [id])
+  replies  Comment[] @relation("CommentReplies")
+
+  @@index([articleId])
+  @@index([momentId])
+  @@index([visitorId])
+}
+
+model Like {
+  id        Int      @id @default(autoincrement())
+  visitorId Int
+  visitor   Visitor @relation(fields: [visitorId], references: [id])
+  momentId  Int
+  moment    Moment @relation(fields: [momentId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@unique([visitorId, momentId])
+  @@index([momentId])
+}
+
+// ==================== 系统配置 ====================
+
+model Setting {
+  id        Int      @id @default(autoincrement())
+  key       String   @unique
+  value     String
+  updatedAt DateTime @updatedAt
+}

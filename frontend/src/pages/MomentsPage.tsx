@@ -1,15 +1,73 @@
 import type { FC } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import type { Moment } from '../types';
+import { API, fetchApi } from '../config/api';
+import { useAuth } from '../hooks/useAuth';
 
 const MomentsPage: FC = () => {
-  const moments = [
-    { id: 1, content: '今天天气真好，出去散步了一下，心情舒畅~', time: '2024-01-16 15:30', likes: 12, images: [] },
-    { id: 2, content: '终于把博客搭建完成了，开心！使用 React + TypeScript + Tailwind CSS，感觉开发效率提升了不少。', time: '2024-01-15 20:45', likes: 28, images: [] },
-    { id: 3, content: '推荐一本好书《深入理解计算机系统》，非常值得反复阅读。每次读都有新的收获。', time: '2024-01-13 10:20', likes: 45, images: [] },
-    { id: 4, content: '今天学习了 React 18 的新特性，并发渲染真的很强大！', time: '2024-01-10 16:15', likes: 33, images: [] },
-    { id: 5, content: '周末和朋友去爬山了，风景很美，空气清新，下次还想去！', time: '2024-01-08 18:00', likes: 56, images: [] },
-    { id: 6, content: '开始学习 Rust 语言，感觉内存安全的概念很有意思，继续加油！', time: '2024-01-05 21:30', likes: 19, images: [] },
-    { id: 7, content: '新年快乐！2024 年，新的开始，新的目标！', time: '2024-01-01 00:00', likes: 128, images: [] },
-  ];
+  const [moments, setMoments] = useState<Moment[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [likedMoments, setLikedMoments] = useState<Set<number>>(new Set());
+  const { isAuthenticated, token } = useAuth();
+
+  useEffect(() => {
+    const fetchMoments = async () => {
+      try {
+        const data = await fetchApi<Moment[]>(API.moments.list({ pageSize: 100 }));
+        setMoments(data || []);
+      } catch (error) {
+        console.error('Failed to fetch moments:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchMoments();
+  }, []);
+
+  const handleLike = useCallback(async (id: number) => {
+    if (!isAuthenticated || !token) {
+      alert('请先登录');
+      return;
+    }
+
+    try {
+      const result = await fetchApi<{ liked: boolean }>(API.moments.like(id), {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      setLikedMoments(prev => {
+        const newSet = new Set(prev);
+        if (result.liked) {
+          newSet.add(id);
+        } else {
+          newSet.delete(id);
+        }
+        return newSet;
+      });
+
+      setMoments(prev => prev.map(m => {
+        if (m.id === id) {
+          return { ...m, likes: result.liked ? m.likes + 1 : m.likes - 1 };
+        }
+        return m;
+      }));
+    } catch (error) {
+      console.error('Failed to like moment:', error);
+    }
+  }, [isAuthenticated, token]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen py-8">
+        <div className="container mx-auto px-6 max-w-3xl">
+          <div className="text-center py-12">
+            <p className="text-[var(--text-secondary)]">加载中...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen py-8">
@@ -20,22 +78,58 @@ const MomentsPage: FC = () => {
         </div>
 
         <div className="space-y-4">
-          {moments.map((moment) => (
-            <div key={moment.id} className="card p-6">
-              <p className="text-[var(--text-primary)] leading-relaxed mb-4">
-                {moment.content}
-              </p>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-[var(--text-secondary)]">{moment.time}</span>
-                <button className="flex items-center gap-1 text-[var(--text-secondary)] hover:text-primary transition-colors">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                  </svg>
-                  <span className="text-sm">{moment.likes}</span>
-                </button>
-              </div>
-            </div>
-          ))}
+          {moments.map((moment) => {
+            const isLiked = likedMoments.has(moment.id);
+            const images = moment.images || [];
+
+            return (
+              <article key={moment.id} className="card p-6">
+                <p className="text-[var(--text-primary)] leading-relaxed mb-4">
+                  {moment.content}
+                </p>
+                {images.length > 0 && (
+                  <div className="grid grid-cols-3 gap-2 mb-4">
+                    {images.slice(0, 9).map((img, idx) => (
+                      <img
+                        key={idx}
+                        src={img}
+                        alt=""
+                        className="w-full aspect-square object-cover rounded-lg"
+                        loading="lazy"
+                      />
+                    ))}
+                  </div>
+                )}
+                <div className="flex items-center justify-between">
+                  <time className="text-sm text-[var(--text-secondary)]" dateTime={moment.createdAt}>
+                    {moment.time || moment.createdAt}
+                  </time>
+                  <button
+                    type="button"
+                    onClick={() => handleLike(moment.id)}
+                    className={`flex items-center gap-1 transition-colors ${
+                      isLiked
+                        ? 'text-primary'
+                        : 'text-[var(--text-secondary)] hover:text-primary'
+                    }`}
+                    aria-label={`点赞，当前 ${moment.likes} 个赞，${isLiked ? '已点赞' : '未点赞'}`}
+                    aria-pressed={isLiked}
+                  >
+                    <svg
+                      className="w-5 h-5"
+                      fill={isLiked ? 'currentColor' : 'none'}
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      aria-hidden="true"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                    </svg>
+                    <span className="text-sm" aria-live="polite">{moment.likes}</span>
+                  </button>
+                </div>
+              </article>
+            );
+          })}
         </div>
       </div>
     </div>

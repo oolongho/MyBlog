@@ -1,83 +1,46 @@
 import type { FC } from 'react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import MarkdownRenderer from '../components/MarkdownRenderer';
+import { API, fetchApi } from '../config/api';
+
+interface Article {
+  id: number;
+  title: string;
+  content: string;
+  category: string;
+  views: number;
+  tags: string[];
+  createdAt: string;
+}
 
 const ArticleDetailPage: FC = () => {
   const { id } = useParams<{ id: string }>();
+  const [article, setArticle] = useState<Article | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [comment, setComment] = useState('');
-  const [comments, setComments] = useState([
-    { id: 1, author: '访客小明', content: '写得很好，学到了很多！', time: '2024-01-16 10:30' },
-    { id: 2, author: '技术爱好者', content: '感谢分享，期待更多文章！', time: '2024-01-16 14:22' },
-  ]);
+  const [comments, setComments] = useState<{ id: number; author: string; content: string; time: string }[]>([]);
 
-  const article = {
-    id: id,
-    title: 'React 18 新特性解析',
-    category: '技术',
-    date: '2024-01-15',
-    views: 256,
-    tags: ['React', '前端'],
-    content: `
-## 前言
-
-React 18 是 React 团队两年工作的成果，带来了许多令人兴奋的新特性。本文将深入探讨这些新特性，帮助你更好地理解和使用 React 18。
-
-## 并发特性
-
-并发是 React 18 最核心的新特性。它允许 React 准备多个版本的 UI 同时存在，并根据用户的交互优先级来决定显示哪个版本。
-
-### Automatic Batching
-
-在 React 18 之前，我们只能在 React 事件处理程序中自动批处理更新。现在，自动批处理适用于所有更新：
-
-\`\`\`javascript
-// React 18 之前：这些更新不会被批处理
-setTimeout(() => {
-  setCount(c => c + 1);
-  setFlag(f => !f);
-  // React 会渲染两次，每次更新一个状态
-}, 1000);
-
-// React 18：这些更新会被自动批处理
-setTimeout(() => {
-  setCount(c => c + 1);
-  setFlag(f => !f);
-  // React 只会渲染一次
-}, 1000);
-\`\`\`
-
-### Transitions
-
-Transitions 是 React 18 中引入的一个新概念，用于区分紧急更新和非紧急更新：
-
-\`\`\`javascript
-import { startTransition } from 'react';
-
-// 紧急更新：显示用户输入
-setInputValue(input);
-
-// 非紧急更新：搜索结果列表
-startTransition(() => {
-  setSearchQuery(input);
-});
-\`\`\`
-
-## Suspense 改进
-
-React 18 对 Suspense 进行了重大改进，现在可以更好地处理异步数据获取：
-
-\`\`\`javascript
-<Suspense fallback={<Loading />}>
-  <DataComponent />
-</Suspense>
-\`\`\`
-
-## 总结
-
-React 18 带来的新特性让我们的应用更加流畅，用户体验更好。建议所有 React 开发者都升级到 React 18，体验这些新特性带来的便利。
-    `,
-  };
+  useEffect(() => {
+    const fetchArticle = async () => {
+      if (!id) return;
+      
+      try {
+        const data = await fetchApi<Article>(API.articles.detail(Number(id)));
+        setArticle(data);
+        
+        // 增加阅读量
+        fetchApi(API.articles.view(Number(id)), { method: 'POST' }).catch(() => {});
+      } catch (err) {
+        setError('文章不存在');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchArticle();
+  }, [id]);
 
   const handleSubmitComment = (e: React.FormEvent) => {
     e.preventDefault();
@@ -94,6 +57,36 @@ React 18 带来的新特性让我们的应用更加流畅，用户体验更好�
       setComment('');
     }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen py-8">
+        <div className="container mx-auto px-6 max-w-4xl">
+          <div className="text-center py-12">
+            <p className="text-[var(--text-secondary)]">加载中...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !article) {
+    return (
+      <div className="min-h-screen py-8">
+        <div className="container mx-auto px-6 max-w-4xl">
+          <div className="card p-12 text-center">
+            <svg className="w-16 h-16 text-[var(--text-secondary)] mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <p className="text-[var(--text-secondary)] mb-4">{error || '文章不存在'}</p>
+            <Link to="/articles" className="text-primary hover:underline">
+              返回文章列表
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen py-8">
@@ -113,7 +106,7 @@ React 18 带来的新特性让我们的应用更加流畅，用户体验更好�
             <span className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-medium">
               {article.category}
             </span>
-            <span className="text-sm text-[var(--text-secondary)]">{article.date}</span>
+            <span className="text-sm text-[var(--text-secondary)]">{article.createdAt}</span>
             <span className="text-sm text-[var(--text-secondary)]">·</span>
             <span className="text-sm text-[var(--text-secondary)]">{article.views} 阅读</span>
           </div>
@@ -122,13 +115,15 @@ React 18 带来的新特性让我们的应用更加流畅，用户体验更好�
             {article.title}
           </h1>
 
-          <div className="flex gap-2 mb-8">
-            {article.tags.map((tag) => (
-              <span key={tag} className="px-3 py-1 bg-[var(--border-color)] rounded-full text-sm text-[var(--text-secondary)]">
-                #{tag}
-              </span>
-            ))}
-          </div>
+          {article.tags && article.tags.length > 0 && (
+            <div className="flex gap-2 mb-8">
+              {article.tags.map((tag) => (
+                <span key={tag} className="px-3 py-1 bg-[var(--border-color)] rounded-full text-sm text-[var(--text-secondary)]">
+                  #{tag}
+                </span>
+              ))}
+            </div>
+          )}
 
           <div className="prose prose-lg max-w-none text-[var(--text-primary)]">
             <MarkdownRenderer content={article.content} />
@@ -155,17 +150,21 @@ React 18 带来的新特性让我们的应用更加流畅，用户体验更好�
             </button>
           </form>
 
-          <div className="space-y-4">
-            {comments.map((c) => (
-              <div key={c.id} className="p-4 bg-[var(--border-color)]/30 rounded-xl">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-medium text-[var(--text-primary)]">{c.author}</span>
-                  <span className="text-xs text-[var(--text-secondary)]">{c.time}</span>
+          {comments.length > 0 ? (
+            <div className="space-y-4">
+              {comments.map((c) => (
+                <div key={c.id} className="p-4 bg-[var(--border-color)]/30 rounded-xl">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-medium text-[var(--text-primary)]">{c.author}</span>
+                    <span className="text-xs text-[var(--text-secondary)]">{c.time}</span>
+                  </div>
+                  <p className="text-[var(--text-secondary)]">{c.content}</p>
                 </div>
-                <p className="text-[var(--text-secondary)]">{c.content}</p>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-center text-[var(--text-secondary)] py-8">暂无评论，来抢沙发吧~</p>
+          )}
         </section>
       </div>
     </div>
