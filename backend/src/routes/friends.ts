@@ -55,6 +55,24 @@ export default async function friendRoutes(fastify: FastifyInstance) {
     });
   });
 
+  fastify.put('/:id', {
+    onRequest: [fastify.authenticateAdmin],
+  }, async (request) => {
+    const id = Number((request.params as { id: string }).id);
+    const body = applySchema.partial().parse(request.body);
+    
+    const updateData: Record<string, unknown> = {};
+    if (body.name !== undefined) updateData.name = body.name;
+    if (body.avatar !== undefined) updateData.avatar = body.avatar;
+    if (body.url !== undefined) updateData.url = body.url;
+    if (body.description !== undefined) updateData.description = body.description;
+    
+    return prisma.friendLink.update({
+      where: { id },
+      data: updateData,
+    });
+  });
+
   fastify.delete('/:id', {
     onRequest: [fastify.authenticateAdmin],
   }, async (request) => {

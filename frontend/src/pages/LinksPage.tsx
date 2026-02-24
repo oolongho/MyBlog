@@ -12,7 +12,10 @@ const LinksPage: FC = () => {
     url: '',
     description: '',
     email: '',
+    avatar: '',
   });
+
+  const emojiOptions = ['🌟', '🚀', '💻', '🎨', '📚', '🔥', '⚡', '🎯', '💎', '🌈', '🐱', '🐶', '🌸', '🍀', '☀️', '🌙'];
 
   useEffect(() => {
     const fetchFriends = async () => {
@@ -37,7 +40,7 @@ const LinksPage: FC = () => {
       });
       alert('申请已提交，我会尽快处理！');
       setShowApplyForm(false);
-      setFormData({ name: '', url: '', description: '', email: '' });
+      setFormData({ name: '', url: '', description: '', email: '', avatar: '' });
     } catch (error) {
       alert('提交失败，请稍后重试');
     }
@@ -81,8 +84,12 @@ const LinksPage: FC = () => {
                   aria-label={`访问 ${friend.name} 的博客：${friend.description}`}
                   role="listitem"
                 >
-                  <div className="w-14 h-14 bg-[var(--border-color)] rounded-xl flex items-center justify-center text-2xl flex-shrink-0 group-hover:scale-110 transition-transform" aria-hidden="true">
-                    {friend.avatar}
+                  <div className="w-14 h-14 bg-[var(--border-color)] rounded-xl flex items-center justify-center text-2xl flex-shrink-0 group-hover:scale-110 transition-transform overflow-hidden" aria-hidden="true">
+                    {friend.avatar && (friend.avatar.startsWith('http') || friend.avatar.startsWith('/')) ? (
+                      <img src={friend.avatar} alt={friend.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <span>{friend.avatar || '🌟'}</span>
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="font-semibold text-[var(--text-primary)] mb-1 group-hover:text-primary transition-colors">
@@ -168,6 +175,46 @@ const LinksPage: FC = () => {
                   className="input-field"
                   placeholder="your@email.com"
                 />
+              </div>
+              <div>
+                <label htmlFor="site-avatar" className="block text-sm font-medium text-[var(--text-primary)] mb-2">
+                  网站 Logo（可选）
+                </label>
+                <input
+                  id="site-avatar"
+                  type="url"
+                  value={formData.avatar}
+                  onChange={(e) => setFormData({ ...formData, avatar: e.target.value })}
+                  className="input-field"
+                  placeholder="https://example.com/logo.png"
+                />
+                <div className="mt-2 flex items-center gap-2 flex-wrap">
+                  <span className="text-xs text-[var(--text-secondary)]">或选择图标：</span>
+                  {emojiOptions.map(emoji => (
+                    <button
+                      key={emoji}
+                      type="button"
+                      className="text-xl p-1 rounded transition-colors"
+                      style={{
+                        backgroundColor: formData.avatar === emoji ? 'rgba(0, 204, 102, 0.2)' : 'transparent',
+                        cursor: 'pointer'
+                      }}
+                      onMouseEnter={(e) => {
+                        if (formData.avatar !== emoji) {
+                          e.currentTarget.style.backgroundColor = 'var(--border-color)';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (formData.avatar !== emoji) {
+                          e.currentTarget.style.backgroundColor = 'transparent';
+                        }
+                      }}
+                      onClick={() => setFormData({ ...formData, avatar: emoji })}
+                    >
+                      {emoji}
+                    </button>
+                  ))}
+                </div>
               </div>
               <div>
                 <label htmlFor="site-description" className="block text-sm font-medium text-[var(--text-primary)] mb-2">

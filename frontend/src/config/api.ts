@@ -66,6 +66,7 @@ export const API = {
     all: `${API_BASE_URL}/api/friends/all`,
     apply: `${API_BASE_URL}/api/friends/apply`,
     status: (id: number) => `${API_BASE_URL}/api/friends/${id}/status`,
+    update: (id: number) => `${API_BASE_URL}/api/friends/${id}`,
     delete: (id: number) => `${API_BASE_URL}/api/friends/${id}`,
   },
   
