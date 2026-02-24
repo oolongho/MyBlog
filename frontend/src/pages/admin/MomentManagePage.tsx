@@ -16,6 +16,7 @@ import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { useAuth } from '../../hooks/useAuth';
 import { API, fetchApi, fetchWithAuth } from '../../config/api';
+import { formatDate } from '../../utils/date';
 
 interface MomentItem {
   id: number;
@@ -35,7 +36,7 @@ const MomentManagePage: FC = () => {
   const fetchMoments = async () => {
     setLoading(true);
     try {
-      const data = await fetchApi<MomentItem[]>(API.moments.list({ pageSize: 100 }));
+      const data = await fetchApi<MomentItem[]>(API.moments.list({ pageSize: 50 }));
       setMoments(Array.isArray(data) ? data : []);
     } catch (error) {
       message.error('获取说说列表失败');
@@ -125,12 +126,13 @@ const MomentManagePage: FC = () => {
     {
       title: '创建时间',
       dataIndex: 'createdAt',
-      width: 120,
+      width: 140,
+      render: (date: string) => formatDate(date),
     },
     {
       title: '操作',
       key: 'action',
-      width: 80,
+      width: 100,
       render: (_, record) => (
         <Popconfirm
           title="确定删除吗？"
@@ -138,7 +140,7 @@ const MomentManagePage: FC = () => {
           okText="确定"
           cancelText="取消"
         >
-          <Button type="link" danger icon={<DeleteOutlined />}>
+          <Button type="link" danger size="small" icon={<DeleteOutlined />}>
             删除
           </Button>
         </Popconfirm>

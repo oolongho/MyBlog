@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import MarkdownRenderer from '../components/MarkdownRenderer';
 import { API, fetchApi } from '../config/api';
+import { formatDate } from '../utils/date';
 
 interface Article {
   id: number;
@@ -106,7 +107,7 @@ const ArticleDetailPage: FC = () => {
             <span className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-medium">
               {article.category}
             </span>
-            <span className="text-sm text-[var(--text-secondary)]">{article.createdAt}</span>
+            <span className="text-sm text-[var(--text-secondary)]">{formatDate(article.createdAt)}</span>
             <span className="text-sm text-[var(--text-secondary)]">·</span>
             <span className="text-sm text-[var(--text-secondary)]">{article.views} 阅读</span>
           </div>

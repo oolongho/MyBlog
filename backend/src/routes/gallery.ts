@@ -60,6 +60,38 @@ export default async function galleryRoutes(fastify: FastifyInstance) {
     return image;
   });
 
+  fastify.put('/:id', {
+    onRequest: [fastify.authenticateAdmin],
+  }, async (request) => {
+    const id = Number((request.params as { id: string }).id);
+    const body = createImageSchema.partial().parse(request.body);
+    
+    const updateData: Record<string, unknown> = {};
+    if (body.url !== undefined) updateData.url = body.url;
+    if (body.thumbnail !== undefined) updateData.thumbnail = body.thumbnail;
+    if (body.title !== undefined) updateData.title = body.title;
+    if (body.description !== undefined) updateData.description = body.description;
+    if (body.category !== undefined) updateData.category = body.category;
+    
+    if (body.tags !== undefined) {
+      updateData.tags = {
+        set: [],
+        connectOrCreate: body.tags.map(name => ({
+          where: { name },
+          create: { name },
+        })),
+      };
+    }
+    
+    const image = await prisma.galleryImage.update({
+      where: { id },
+      data: updateData,
+      include: { tags: true },
+    });
+    
+    return image;
+  });
+
   fastify.delete('/:id', {
     onRequest: [fastify.authenticateAdmin],
   }, async (request, reply) => {

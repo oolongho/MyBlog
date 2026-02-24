@@ -18,6 +18,7 @@ import { PlusOutlined, EditOutlined, DeleteOutlined, EyeOutlined } from '@ant-de
 import type { ColumnsType } from 'antd/es/table';
 import { useAuth } from '../../hooks/useAuth';
 import { API, fetchApi, fetchWithAuth } from '../../config/api';
+import { formatDate } from '../../utils/date';
 
 interface Article {
   id: number;
@@ -157,7 +158,8 @@ const ArticleManagePage: FC = () => {
       title: '创建时间',
       dataIndex: 'createdAt',
       key: 'createdAt',
-      width: 120,
+      width: 140,
+      render: (date: string) => formatDate(date),
     },
     {
       title: '操作',

@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { Table, Button, Tag, Space, message, Popconfirm, Card, Select } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useAuth } from '../../hooks/useAuth';
-import { API, fetchApi, fetchWithAuth } from '../../config/api';
+import { API, fetchWithAuth } from '../../config/api';
 
 interface FriendLink {
   id: number;
@@ -21,9 +21,10 @@ const FriendManagePage: FC = () => {
   const { token } = useAuth();
 
   const fetchFriends = async () => {
+    if (!token) return;
     setLoading(true);
     try {
-      const data = await fetchApi<FriendLink[]>(API.friends.all);
+      const data = await fetchWithAuth<FriendLink[]>(API.friends.all, token);
       setFriends(data || []);
     } catch (error) {
       message.error('获取友链列表失败');
@@ -33,8 +34,10 @@ const FriendManagePage: FC = () => {
   };
 
   useEffect(() => {
-    fetchFriends();
-  }, []);
+    if (token) {
+      fetchFriends();
+    }
+  }, [token]);
 
   const handleStatusChange = async (id: number, status: number) => {
     try {
@@ -64,9 +67,13 @@ const FriendManagePage: FC = () => {
       title: '头像',
       dataIndex: 'avatar',
       width: 60,
-      render: (avatar) => (
-        <img src={avatar} alt="" style={{ width: 40, height: 40, borderRadius: '50%' }} />
-      ),
+      render: (avatar) => {
+        if (!avatar) return <span style={{ fontSize: 24 }}>🌟</span>;
+        if (avatar.startsWith('http') || avatar.startsWith('/')) {
+          return <img src={avatar} alt="" style={{ width: 40, height: 40, borderRadius: '50%' }} />;
+        }
+        return <span style={{ fontSize: 24 }}>{avatar}</span>;
+      },
     },
     {
       title: '名称',

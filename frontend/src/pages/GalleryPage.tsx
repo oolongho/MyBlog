@@ -12,7 +12,7 @@ const GalleryPage: FC = () => {
   useEffect(() => {
     const fetchImages = async () => {
       try {
-        const data = await fetchApi<GalleryImage[]>(API.gallery.list({ pageSize: 100 }));
+        const data = await fetchApi<GalleryImage[]>(API.gallery.list({ pageSize: 50 }));
         setImages(data || []);
       } catch (error) {
         console.error('Failed to fetch gallery:', error);

@@ -4,7 +4,7 @@ import { prisma } from '../lib/prisma.js';
 
 const applySchema = z.object({
   name: z.string().min(1),
-  avatar: z.string().url(),
+  avatar: z.string().optional(),
   url: z.string().url(),
   description: z.string().min(1),
   email: z.string().email().optional(),
@@ -29,10 +29,13 @@ export default async function friendRoutes(fastify: FastifyInstance) {
   fastify.post('/apply', async (request) => {
     const body = applySchema.parse(request.body);
     
+    const defaultAvatars = ['🌟', '🚀', '💻', '🎨', '📚', '🔥', '⚡', '🎯', '💎', '🌈'];
+    const avatar = body.avatar || defaultAvatars[Math.floor(Math.random() * defaultAvatars.length)];
+    
     return prisma.friendLink.create({
       data: {
         name: body.name,
-        avatar: body.avatar,
+        avatar: avatar,
         url: body.url,
         description: body.description,
         status: 0,

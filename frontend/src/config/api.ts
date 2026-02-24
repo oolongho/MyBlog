@@ -57,6 +57,7 @@ export const API = {
       return `${API_BASE_URL}/api/gallery${query ? `?${query}` : ''}`;
     },
     create: `${API_BASE_URL}/api/gallery`,
+    update: (id: number) => `${API_BASE_URL}/api/gallery/${id}`,
     delete: (id: number) => `${API_BASE_URL}/api/gallery/${id}`,
   },
   
@@ -86,12 +87,20 @@ export const API = {
 } as const;
 
 export async function fetchApi<T>(url: string, options?: RequestInit): Promise<T> {
+  const hasBody = options?.body !== undefined;
+  const headers: HeadersInit = {};
+  
+  if (options?.headers) {
+    Object.assign(headers, options.headers);
+  }
+  
+  if (hasBody) {
+    headers['Content-Type'] = 'application/json';
+  }
+
   const response = await fetch(url, {
     ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
+    headers,
     credentials: 'include',
   });
 

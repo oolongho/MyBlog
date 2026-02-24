@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import type { Article } from '../types';
 import { useDebouncedValue } from '../hooks/useDebouncedValue';
 import { API, fetchApi } from '../config/api';
+import { formatRelativeTime } from '../utils/date';
 
 const ArticlesPage: FC = () => {
   const [articles, setArticles] = useState<Article[]>([]);
@@ -130,7 +131,7 @@ const ArticlesPage: FC = () => {
                       <span className="px-2 py-1 bg-primary/10 text-primary rounded-md text-xs font-medium">
                         {article.category}
                       </span>
-                      <span className="text-xs text-[var(--text-secondary)]">{article.date || article.createdAt}</span>
+                      <span className="text-xs text-[var(--text-secondary)]">{formatRelativeTime(article.createdAt)}</span>
                     </div>
                     <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-2 hover:text-primary transition-colors">
                       {article.title}

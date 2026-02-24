@@ -1,5 +1,5 @@
 import type { FC } from 'react';
-import { useState, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import type { FriendLink } from '../types';
 import { API, fetchApi } from '../config/api';
 
@@ -14,7 +14,7 @@ const LinksPage: FC = () => {
     email: '',
   });
 
-  useState(() => {
+  useEffect(() => {
     const fetchFriends = async () => {
       try {
         const data = await fetchApi<FriendLink[]>(API.friends.list);
@@ -26,7 +26,7 @@ const LinksPage: FC = () => {
       }
     };
     fetchFriends();
-  });
+  }, []);
 
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();

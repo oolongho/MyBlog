@@ -4,6 +4,7 @@ import { Table, Button, message, Popconfirm, Card, Tag } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useAuth } from '../../hooks/useAuth';
 import { API, fetchApi, fetchWithAuth } from '../../config/api';
+import { formatDate } from '../../utils/date';
 
 interface Comment {
   id: number;
@@ -26,7 +27,7 @@ const CommentManagePage: FC = () => {
   const fetchComments = async () => {
     setLoading(true);
     try {
-      const data = await fetchApi<Comment[]>(API.comments.list({ pageSize: 100 }));
+      const data = await fetchApi<Comment[]>(API.comments.list({ pageSize: 50 }));
       setComments(data || []);
     } catch (error) {
       message.error('获取评论列表失败');
@@ -81,12 +82,13 @@ const CommentManagePage: FC = () => {
     {
       title: '时间',
       dataIndex: 'createdAt',
-      width: 120,
+      width: 140,
+      render: (date: string) => formatDate(date),
     },
     {
       title: '操作',
       key: 'action',
-      width: 80,
+      width: 100,
       render: (_, record) => (
         <Popconfirm
           title="确定删除吗？"
@@ -94,7 +96,7 @@ const CommentManagePage: FC = () => {
           okText="确定"
           cancelText="取消"
         >
-          <Button type="link" danger>
+          <Button type="link" danger size="small">
             删除
           </Button>
         </Popconfirm>

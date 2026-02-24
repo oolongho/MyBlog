@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import type { Moment } from '../types';
 import { API, fetchApi } from '../config/api';
 import { useAuth } from '../hooks/useAuth';
+import { formatRelativeTime } from '../utils/date';
 
 const MomentsPage: FC = () => {
   const [moments, setMoments] = useState<Moment[]>([]);
@@ -13,7 +14,7 @@ const MomentsPage: FC = () => {
   useEffect(() => {
     const fetchMoments = async () => {
       try {
-        const data = await fetchApi<Moment[]>(API.moments.list({ pageSize: 100 }));
+        const data = await fetchApi<Moment[]>(API.moments.list({ pageSize: 50 }));
         setMoments(data || []);
       } catch (error) {
         console.error('Failed to fetch moments:', error);
@@ -102,7 +103,7 @@ const MomentsPage: FC = () => {
                 )}
                 <div className="flex items-center justify-between">
                   <time className="text-sm text-[var(--text-secondary)]" dateTime={moment.createdAt}>
-                    {moment.time || moment.createdAt}
+                    {formatRelativeTime(moment.createdAt)}
                   </time>
                   <button
                     type="button"
