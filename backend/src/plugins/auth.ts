@@ -9,6 +9,12 @@ declare module 'fastify' {
   }
 }
 
+declare module '@fastify/jwt' {
+  interface FastifyJWT {
+    user: { id: number; role: string };
+  }
+}
+
 export default fp(async function authPlugin(fastify: FastifyInstance) {
   fastify.decorate('authenticate', async function (request: FastifyRequest, reply: FastifyReply) {
     try {
