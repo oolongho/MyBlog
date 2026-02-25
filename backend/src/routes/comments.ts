@@ -29,6 +29,24 @@ export default async function commentRoutes(fastify: FastifyInstance) {
       orderBy: { createdAt: 'desc' },
       include: {
         visitor: { select: { id: true, nickname: true, avatar: true } },
+        article: { select: { id: true, title: true } },
+        moment: { select: { id: true } },
+      },
+    });
+    
+    return comments;
+  });
+
+  fastify.get('/all', {
+    onRequest: [fastify.authenticateAdmin],
+  }, async () => {
+    const comments = await prisma.comment.findMany({
+      orderBy: { createdAt: 'desc' },
+      take: 100,
+      include: {
+        visitor: { select: { id: true, nickname: true, avatar: true } },
+        article: { select: { id: true, title: true } },
+        moment: { select: { id: true } },
       },
     });
     
@@ -37,17 +55,41 @@ export default async function commentRoutes(fastify: FastifyInstance) {
 
   fastify.post('/', {
     onRequest: [fastify.authenticate],
-  }, async (request) => {
+  }, async (request, reply) => {
     const body = createCommentSchema.parse(request.body);
     
     if (!body.articleId && !body.momentId) {
+      reply.code(400);
       return { error: '必须指定文章或说说' };
+    }
+    
+    let visitorId: number;
+    
+    if (request.user!.role === 'visitor') {
+      visitorId = request.user!.id;
+    } else {
+      let visitor = await prisma.visitor.findFirst({
+        where: { email: `admin_${request.user!.id}@local` },
+      });
+      
+      if (!visitor) {
+        visitor = await prisma.visitor.create({
+          data: {
+            nickname: `管理员`,
+            email: `admin_${request.user!.id}@local`,
+            provider: 'admin',
+            providerId: String(request.user!.id),
+          },
+        });
+      }
+      
+      visitorId = visitor.id;
     }
     
     const comment = await prisma.comment.create({
       data: {
         content: body.content,
-        visitorId: request.user!.id,
+        visitorId,
         articleId: body.articleId,
         momentId: body.momentId,
         parentId: body.parentId,

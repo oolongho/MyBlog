@@ -1,9 +1,10 @@
 import type { FC } from 'react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import MarkdownRenderer from '../components/MarkdownRenderer';
-import { API, fetchApi } from '../config/api';
-import { formatDate } from '../utils/date';
+import { API, fetchApi, fetchWithAuth } from '../config/api';
+import { formatDate, formatRelativeTime } from '../utils/date';
+import { useAuth } from '../hooks/useAuth';
 
 interface Article {
   id: number;
@@ -15,47 +16,81 @@ interface Article {
   createdAt: string;
 }
 
+interface Comment {
+  id: number;
+  content: string;
+  createdAt: string;
+  visitor: {
+    id: number;
+    nickname: string;
+    avatar?: string;
+  };
+}
+
 const ArticleDetailPage: FC = () => {
   const { id } = useParams<{ id: string }>();
   const [article, setArticle] = useState<Article | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [comment, setComment] = useState('');
-  const [comments, setComments] = useState<{ id: number; author: string; content: string; time: string }[]>([]);
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [commentsLoading, setCommentsLoading] = useState(false);
+  const { isAuthenticated, token } = useAuth();
 
-  useEffect(() => {
-    const fetchArticle = async () => {
-      if (!id) return;
-      
-      try {
-        const data = await fetchApi<Article>(API.articles.detail(Number(id)));
-        setArticle(data);
-        
-        // 增加阅读量
-        fetchApi(API.articles.view(Number(id)), { method: 'POST' }).catch(() => {});
-      } catch (err) {
-        setError('文章不存在');
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchArticle = useCallback(async () => {
+    if (!id) return;
     
-    fetchArticle();
+    try {
+      const data = await fetchApi<Article>(API.articles.detail(Number(id)));
+      setArticle(data);
+      
+      fetchApi(API.articles.view(Number(id)), { method: 'POST' }).catch(() => {});
+    } catch (err) {
+      setError('文章不存在');
+    } finally {
+      setLoading(false);
+    }
   }, [id]);
 
-  const handleSubmitComment = (e: React.FormEvent) => {
+  const fetchComments = useCallback(async () => {
+    if (!id) return;
+    setCommentsLoading(true);
+    try {
+      const data = await fetchApi<Comment[]>(API.comments.list({ articleId: Number(id), pageSize: 50 }));
+      setComments(data || []);
+    } catch (err) {
+      console.error('Failed to fetch comments:', err);
+    } finally {
+      setCommentsLoading(false);
+    }
+  }, [id]);
+
+  useEffect(() => {
+    fetchArticle();
+    fetchComments();
+  }, [fetchArticle, fetchComments]);
+
+  const handleSubmitComment = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (comment.trim()) {
-      setComments([
-        ...comments,
-        {
-          id: Date.now(),
-          author: '访客',
-          content: comment,
-          time: new Date().toLocaleString('zh-CN'),
-        },
-      ]);
+    if (!comment.trim()) return;
+    
+    if (!isAuthenticated || !token) {
+      alert('请先登录');
+      return;
+    }
+
+    try {
+      const newComment = await fetchWithAuth<Comment>(API.comments.create, token!, {
+        method: 'POST',
+        body: JSON.stringify({
+          content: comment.trim(),
+          articleId: Number(id),
+        }),
+      });
+      setComments(prev => [newComment, ...prev]);
       setComment('');
+    } catch (err) {
+      alert('评论失败，请稍后重试');
     }
   };
 
@@ -143,21 +178,41 @@ const ArticleDetailPage: FC = () => {
             <textarea
               value={comment}
               onChange={(e) => setComment(e.target.value)}
-              placeholder="写下你的评论..."
+              placeholder={isAuthenticated ? "写下你的评论..." : "请先登录后评论"}
               className="input-field min-h-[100px] resize-none mb-4"
+              disabled={!isAuthenticated}
             />
-            <button type="submit" className="btn-primary">
+            <button 
+              type="submit" 
+              className={`btn-primary ${!isAuthenticated ? 'opacity-50 cursor-not-allowed' : ''}`}
+              disabled={!isAuthenticated}
+            >
               发表评论
             </button>
           </form>
 
-          {comments.length > 0 ? (
+          {commentsLoading ? (
+            <p className="text-center text-[var(--text-secondary)] py-8">加载评论中...</p>
+          ) : comments.length > 0 ? (
             <div className="space-y-4">
               {comments.map((c) => (
                 <div key={c.id} className="p-4 bg-[var(--border-color)]/30 rounded-xl">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="font-medium text-[var(--text-primary)]">{c.author}</span>
-                    <span className="text-xs text-[var(--text-secondary)]">{c.time}</span>
+                    <div className="flex items-center gap-2">
+                      {c.visitor.avatar ? (
+                        <img 
+                          src={c.visitor.avatar} 
+                          alt={c.visitor.nickname}
+                          className="w-6 h-6 rounded-full object-cover"
+                        />
+                      ) : (
+                        <span className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-sm">
+                          {c.visitor.nickname.charAt(0).toUpperCase()}
+                        </span>
+                      )}
+                      <span className="font-medium text-[var(--text-primary)]">{c.visitor.nickname}</span>
+                    </div>
+                    <span className="text-xs text-[var(--text-secondary)]">{formatRelativeTime(c.createdAt)}</span>
                   </div>
                   <p className="text-[var(--text-secondary)]">{c.content}</p>
                 </div>

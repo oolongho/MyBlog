@@ -1,20 +1,39 @@
 import type { FC } from 'react';
 import { useState, useEffect, useCallback } from 'react';
 import type { Moment } from '../types';
-import { API, fetchApi } from '../config/api';
+import { API, fetchApi, fetchWithAuth } from '../config/api';
 import { useAuth } from '../hooks/useAuth';
 import { formatRelativeTime } from '../utils/date';
 
+interface Comment {
+  id: number;
+  content: string;
+  createdAt: string;
+  visitor: {
+    id: number;
+    nickname: string;
+    avatar?: string;
+  };
+}
+
+interface MomentWithComments extends Moment {
+  comments?: Comment[];
+  commentCount?: number;
+}
+
 const MomentsPage: FC = () => {
-  const [moments, setMoments] = useState<Moment[]>([]);
+  const [moments, setMoments] = useState<MomentWithComments[]>([]);
   const [loading, setLoading] = useState(true);
   const [likedMoments, setLikedMoments] = useState<Set<number>>(new Set());
+  const [expandedComments, setExpandedComments] = useState<Set<number>>(new Set());
+  const [commentInputs, setCommentInputs] = useState<Record<number, string>>({});
+  const [commentsData, setCommentsData] = useState<Record<number, Comment[]>>({});
   const { isAuthenticated, token } = useAuth();
 
   useEffect(() => {
     const fetchMoments = async () => {
       try {
-        const data = await fetchApi<Moment[]>(API.moments.list({ pageSize: 50 }));
+        const data = await fetchApi<MomentWithComments[]>(API.moments.list({ pageSize: 50 }));
         setMoments(data || []);
       } catch (error) {
         console.error('Failed to fetch moments:', error);
@@ -58,6 +77,61 @@ const MomentsPage: FC = () => {
     }
   }, [isAuthenticated, token]);
 
+  const toggleComments = useCallback(async (momentId: number) => {
+    if (expandedComments.has(momentId)) {
+      setExpandedComments(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(momentId);
+        return newSet;
+      });
+    } else {
+      setExpandedComments(prev => new Set(prev).add(momentId));
+      if (!commentsData[momentId]) {
+        try {
+          const comments = await fetchApi<Comment[]>(API.comments.list({ momentId, pageSize: 50 }));
+          setCommentsData(prev => ({ ...prev, [momentId]: comments || [] }));
+        } catch (error) {
+          console.error('Failed to fetch comments:', error);
+        }
+      }
+    }
+  }, [expandedComments, commentsData]);
+
+  const handleSubmitComment = useCallback(async (momentId: number) => {
+    const content = commentInputs[momentId]?.trim();
+    if (!content) return;
+    
+    if (!isAuthenticated || !token) {
+      alert('请先登录');
+      return;
+    }
+
+    try {
+      const newComment = await fetchWithAuth<Comment>(API.comments.create, token!, {
+        method: 'POST',
+        body: JSON.stringify({
+          content,
+          momentId,
+        }),
+      });
+      
+      setCommentsData(prev => ({
+        ...prev,
+        [momentId]: [newComment, ...(prev[momentId] || [])],
+      }));
+      setCommentInputs(prev => ({ ...prev, [momentId]: '' }));
+      
+      setMoments(prev => prev.map(m => {
+        if (m.id === momentId) {
+          return { ...m, commentCount: (m.commentCount || 0) + 1 };
+        }
+        return m;
+      }));
+    } catch (error) {
+      alert('评论失败，请稍后重试');
+    }
+  }, [commentInputs, isAuthenticated, token]);
+
   if (loading) {
     return (
       <div className="min-h-screen py-8">
@@ -82,6 +156,8 @@ const MomentsPage: FC = () => {
           {moments.map((moment) => {
             const isLiked = likedMoments.has(moment.id);
             const images = moment.images || [];
+            const isExpanded = expandedComments.has(moment.id);
+            const comments = commentsData[moment.id] || [];
 
             return (
               <article key={moment.id} className="card p-6">
@@ -105,29 +181,95 @@ const MomentsPage: FC = () => {
                   <time className="text-sm text-[var(--text-secondary)]" dateTime={moment.createdAt}>
                     {formatRelativeTime(moment.createdAt)}
                   </time>
-                  <button
-                    type="button"
-                    onClick={() => handleLike(moment.id)}
-                    className={`flex items-center gap-1 transition-colors ${
-                      isLiked
-                        ? 'text-primary'
-                        : 'text-[var(--text-secondary)] hover:text-primary'
-                    }`}
-                    aria-label={`点赞，当前 ${moment.likes} 个赞，${isLiked ? '已点赞' : '未点赞'}`}
-                    aria-pressed={isLiked}
-                  >
-                    <svg
-                      className="w-5 h-5"
-                      fill={isLiked ? 'currentColor' : 'none'}
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      aria-hidden="true"
+                  <div className="flex items-center gap-4">
+                    <button
+                      type="button"
+                      onClick={() => toggleComments(moment.id)}
+                      className="flex items-center gap-1 text-[var(--text-secondary)] hover:text-primary transition-colors"
                     >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                    </svg>
-                    <span className="text-sm" aria-live="polite">{moment.likes}</span>
-                  </button>
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L5 20l1.395-3.72C5.512 15.042 5 13.574 5 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                      </svg>
+                      <span className="text-sm">{moment.commentCount || 0}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleLike(moment.id)}
+                      className={`flex items-center gap-1 transition-colors ${
+                        isLiked
+                          ? 'text-primary'
+                          : 'text-[var(--text-secondary)] hover:text-primary'
+                      }`}
+                      aria-label={`点赞，当前 ${moment.likes} 个赞，${isLiked ? '已点赞' : '未点赞'}`}
+                      aria-pressed={isLiked}
+                    >
+                      <svg
+                        className="w-5 h-5"
+                        fill={isLiked ? 'currentColor' : 'none'}
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                      </svg>
+                      <span className="text-sm" aria-live="polite">{moment.likes}</span>
+                    </button>
+                  </div>
                 </div>
+
+                {isExpanded && (
+                  <div className="mt-4 pt-4 border-t border-[var(--border-color)]">
+                    <div className="mb-4">
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={commentInputs[moment.id] || ''}
+                          onChange={(e) => setCommentInputs(prev => ({ ...prev, [moment.id]: e.target.value }))}
+                          placeholder={isAuthenticated ? "写下你的评论..." : "请先登录后评论"}
+                          className="input-field flex-1"
+                          disabled={!isAuthenticated}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleSubmitComment(moment.id)}
+                          className={`btn-primary text-sm px-3 ${!isAuthenticated ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          disabled={!isAuthenticated || !(commentInputs[moment.id]?.trim())}
+                        >
+                          发送
+                        </button>
+                      </div>
+                    </div>
+                    
+                    {comments.length > 0 ? (
+                      <div className="space-y-3">
+                        {comments.map((c) => (
+                          <div key={c.id} className="flex items-start gap-2">
+                            {c.visitor.avatar ? (
+                              <img 
+                                src={c.visitor.avatar} 
+                                alt={c.visitor.nickname}
+                                className="w-6 h-6 rounded-full object-cover flex-shrink-0"
+                              />
+                            ) : (
+                              <span className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-xs flex-shrink-0">
+                                {c.visitor.nickname.charAt(0).toUpperCase()}
+                              </span>
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium text-sm text-[var(--text-primary)]">{c.visitor.nickname}</span>
+                                <span className="text-xs text-[var(--text-secondary)]">{formatRelativeTime(c.createdAt)}</span>
+                              </div>
+                              <p className="text-sm text-[var(--text-secondary)]">{c.content}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-center text-sm text-[var(--text-secondary)] py-4">暂无评论</p>
+                    )}
+                  </div>
+                )}
               </article>
             );
           })}

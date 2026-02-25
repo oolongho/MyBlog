@@ -80,6 +80,7 @@ export const API = {
       const query = searchParams.toString();
       return `${API_BASE_URL}/api/comments${query ? `?${query}` : ''}`;
     },
+    all: `${API_BASE_URL}/api/comments/all`,
     create: `${API_BASE_URL}/api/comments`,
     delete: (id: number) => `${API_BASE_URL}/api/comments/${id}`,
   },

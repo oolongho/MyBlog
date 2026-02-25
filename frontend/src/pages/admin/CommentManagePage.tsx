@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { Table, Button, message, Popconfirm, Card, Tag } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useAuth } from '../../hooks/useAuth';
-import { API, fetchApi, fetchWithAuth } from '../../config/api';
+import { API, fetchWithAuth } from '../../config/api';
 import { formatDate } from '../../utils/date';
 
 interface Comment {
@@ -25,9 +25,10 @@ const CommentManagePage: FC = () => {
   const { token } = useAuth();
 
   const fetchComments = async () => {
+    if (!token) return;
     setLoading(true);
     try {
-      const data = await fetchApi<Comment[]>(API.comments.list({ pageSize: 50 }));
+      const data = await fetchWithAuth<Comment[]>(API.comments.all, token);
       setComments(data || []);
     } catch (error) {
       message.error('获取评论列表失败');
@@ -37,8 +38,10 @@ const CommentManagePage: FC = () => {
   };
 
   useEffect(() => {
-    fetchComments();
-  }, []);
+    if (token) {
+      fetchComments();
+    }
+  }, [token]);
 
   const handleDelete = async (id: number) => {
     try {
@@ -60,21 +63,24 @@ const CommentManagePage: FC = () => {
       title: '评论者',
       dataIndex: ['visitor', 'nickname'],
       width: 100,
+      ellipsis: true,
     },
     {
       title: '内容',
       dataIndex: 'content',
       ellipsis: true,
+      width: 200,
     },
     {
       title: '来源',
       key: 'source',
-      width: 150,
+      width: 140,
+      ellipsis: true,
       render: (_, record) =>
         record.article ? (
           <Tag color="blue">文章: {record.article.title}</Tag>
         ) : record.moment ? (
-          <Tag color="green">说说</Tag>
+          <Tag color="green">说说 #{record.moment.id}</Tag>
         ) : (
           <Tag>未知</Tag>
         ),
@@ -88,7 +94,7 @@ const CommentManagePage: FC = () => {
     {
       title: '操作',
       key: 'action',
-      width: 100,
+      width: 80,
       render: (_, record) => (
         <Popconfirm
           title="确定删除吗？"
@@ -106,7 +112,13 @@ const CommentManagePage: FC = () => {
 
   return (
     <Card title="评论管理">
-      <Table columns={columns} dataSource={comments} rowKey="id" loading={loading} />
+      <Table 
+        columns={columns} 
+        dataSource={comments} 
+        rowKey="id" 
+        loading={loading}
+        scroll={{ x: 720 }}
+      />
     </Card>
   );
 };
