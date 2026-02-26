@@ -14,6 +14,7 @@ const MomentsPage = lazy(() => import('./pages/MomentsPage'));
 const GalleryPage = lazy(() => import('./pages/GalleryPage'));
 const LinksPage = lazy(() => import('./pages/LinksPage'));
 const AboutPage = lazy(() => import('./pages/AboutPage'));
+const AuthPage = lazy(() => import('./pages/AuthPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 
 const AdminLayout = lazy(() => import('./components/admin/AdminLayout'));
@@ -69,6 +70,7 @@ const App: FC = () => {
                       <Route path="/gallery" element={<GalleryPage />} />
                       <Route path="/links" element={<LinksPage />} />
                       <Route path="/about" element={<AboutPage />} />
+                      <Route path="/login" element={<AuthPage />} />
                       <Route path="*" element={<NotFoundPage />} />
                     </Routes>
                   </Suspense>

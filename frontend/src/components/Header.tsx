@@ -1,6 +1,7 @@
 import type { FC } from 'react';
 import { useState, useCallback } from 'react';
-import { Link, NavLink } from 'react-router-dom';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
 
 interface HeaderProps {
   theme: 'light' | 'dark';
@@ -37,6 +38,9 @@ const ThemeToggleButton: FC<ThemeToggleButtonProps> = ({ theme, toggleTheme }) =
 
 const Header: FC<HeaderProps> = ({ theme, toggleTheme }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const { isAuthenticated, user, logout } = useAuth();
+  const navigate = useNavigate();
 
   const navLinkClass = useCallback(({ isActive }: { isActive: boolean }) =>
     `relative px-4 py-2 rounded-full font-medium transition-all duration-300 ${
@@ -64,6 +68,12 @@ const Header: FC<HeaderProps> = ({ theme, toggleTheme }) => {
     setIsMenuOpen(false);
   }, []);
 
+  const handleLogout = useCallback(() => {
+    logout();
+    setIsUserMenuOpen(false);
+    navigate('/');
+  }, [logout, navigate]);
+
   return (
     <header className={`shadow-lg sticky top-0 z-50 backdrop-blur-sm transition-colors duration-300 ${
       theme === 'light' ? 'bg-white border-b border-gray-200' : 'bg-[#1a1a1a] border-b border-[#333]'
@@ -87,6 +97,63 @@ const Header: FC<HeaderProps> = ({ theme, toggleTheme }) => {
           </ul>
           
           <ThemeToggleButton theme={theme} toggleTheme={toggleTheme} />
+
+          {isAuthenticated && user ? (
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setIsUserMenuOpen(prev => !prev)}
+                className={`flex items-center gap-2 px-3 py-2 rounded-full transition-all duration-300 ${
+                  theme === 'light' 
+                    ? 'bg-gray-100 hover:bg-gray-200' 
+                    : 'bg-[#2a2a2a] hover:bg-[#333]'
+                }`}
+              >
+                {user.avatar ? (
+                  <img src={user.avatar} alt={user.nickname} className="w-6 h-6 rounded-full object-cover" />
+                ) : (
+                  <span className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-xs font-medium">
+                    {user.nickname.charAt(0).toUpperCase()}
+                  </span>
+                )}
+                <span className={`text-sm font-medium ${theme === 'light' ? 'text-gray-700' : 'text-gray-300'}`}>
+                  {user.nickname}
+                </span>
+                <svg className={`w-4 h-4 ${theme === 'light' ? 'text-gray-500' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              
+              {isUserMenuOpen && (
+                <div className={`absolute right-0 mt-2 w-40 rounded-lg shadow-lg py-1 ${
+                  theme === 'light' ? 'bg-white border border-gray-200' : 'bg-[#2a2a2a] border border-[#333]'
+                }`}>
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className={`block w-full text-left px-4 py-2 text-sm transition-colors ${
+                      theme === 'light' 
+                        ? 'text-gray-700 hover:bg-gray-100' 
+                        : 'text-gray-300 hover:bg-[#333]'
+                    }`}
+                  >
+                    退出登录
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <Link
+              to="/login"
+              className={`px-4 py-2 rounded-full font-medium transition-all duration-300 ${
+                theme === 'light' 
+                  ? 'bg-primary text-gray-900 hover:bg-primary/90' 
+                  : 'bg-primary text-gray-900 hover:bg-primary/90'
+              }`}
+            >
+              登录
+            </Link>
+          )}
         </nav>
 
         <div className="flex items-center gap-2 md:hidden">
@@ -134,6 +201,44 @@ const Header: FC<HeaderProps> = ({ theme, toggleTheme }) => {
               <li><NavLink to="/links" className={mobileNavLinkClass} onClick={handleCloseMenu} role="menuitem">友链</NavLink></li>
               <li><NavLink to="/about" className={mobileNavLinkClass} onClick={handleCloseMenu} role="menuitem">关于</NavLink></li>
             </ul>
+            
+            {isAuthenticated && user ? (
+              <div className={`mt-4 pt-4 border-t ${theme === 'light' ? 'border-gray-200' : 'border-[#333]'}`}>
+                <div className="flex items-center gap-2 mb-3">
+                  {user.avatar ? (
+                    <img src={user.avatar} alt={user.nickname} className="w-8 h-8 rounded-full object-cover" />
+                  ) : (
+                    <span className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-sm font-medium">
+                      {user.nickname.charAt(0).toUpperCase()}
+                    </span>
+                  )}
+                  <span className={`font-medium ${theme === 'light' ? 'text-gray-700' : 'text-gray-300'}`}>
+                    {user.nickname}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className={`block w-full text-left px-4 py-2 rounded-lg text-sm transition-colors ${
+                    theme === 'light' 
+                      ? 'text-gray-700 hover:bg-gray-100' 
+                      : 'text-gray-300 hover:bg-[#333]'
+                  }`}
+                >
+                  退出登录
+                </button>
+              </div>
+            ) : (
+              <Link
+                to="/login"
+                onClick={handleCloseMenu}
+                className={`block mt-4 text-center px-4 py-2 rounded-lg font-medium ${
+                  'bg-primary text-gray-900'
+                }`}
+              >
+                登录
+              </Link>
+            )}
           </nav>
         </div>
       )}
