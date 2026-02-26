@@ -68,6 +68,24 @@ export default async function momentRoutes(fastify: FastifyInstance) {
     return { ...moment, images: body.images || [] };
   });
 
+  fastify.put('/:id', {
+    onRequest: [fastify.authenticateAdmin],
+  }, async (request, reply) => {
+    const id = Number((request.params as { id: string }).id);
+    const body = createMomentSchema.partial().parse(request.body);
+    
+    const updateData: Record<string, unknown> = {};
+    if (body.content !== undefined) updateData.content = body.content;
+    if (body.images !== undefined) updateData.images = JSON.stringify(body.images);
+    
+    const moment = await prisma.moment.update({
+      where: { id },
+      data: updateData,
+    });
+    
+    return { ...moment, images: body.images || JSON.parse(moment.images || '[]') };
+  });
+
   fastify.delete('/:id', {
     onRequest: [fastify.authenticateAdmin],
   }, async (request, reply) => {

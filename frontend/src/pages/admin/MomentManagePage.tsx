@@ -12,7 +12,7 @@ import {
   Card,
   Image,
 } from 'antd';
-import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
+import { PlusOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { useAuth } from '../../hooks/useAuth';
 import { API, fetchApi, fetchWithAuth } from '../../config/api';
@@ -30,6 +30,7 @@ const MomentManagePage: FC = () => {
   const [moments, setMoments] = useState<MomentItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
+  const [editingMoment, setEditingMoment] = useState<MomentItem | null>(null);
   const [form] = Form.useForm();
   const { token } = useAuth();
 
@@ -57,7 +58,7 @@ const MomentManagePage: FC = () => {
 
       await fetchWithAuth(API.moments.create, token!, {
         method: 'POST',
-        body: JSON.stringify({ ...values, images: imageUrls }),
+        body: JSON.stringify({ content: values.content, images: imageUrls }),
       });
       message.success('创建成功');
       setModalVisible(false);
@@ -65,6 +66,31 @@ const MomentManagePage: FC = () => {
       fetchMoments();
     } catch (error) {
       message.error('创建失败');
+    }
+  };
+
+  const handleEdit = async (values: { content: string; images: string }) => {
+    if (!editingMoment) return;
+    
+    try {
+      const imageUrls = values.images
+        ? values.images
+            .split('\n')
+            .map((url: string) => url.trim())
+            .filter(Boolean)
+        : [];
+
+      await fetchWithAuth(API.moments.update(editingMoment.id), token!, {
+        method: 'PUT',
+        body: JSON.stringify({ content: values.content, images: imageUrls }),
+      });
+      message.success('更新成功');
+      setModalVisible(false);
+      setEditingMoment(null);
+      form.resetFields();
+      fetchMoments();
+    } catch (error) {
+      message.error('更新失败');
     }
   };
 
@@ -76,6 +102,28 @@ const MomentManagePage: FC = () => {
     } catch (error) {
       message.error('删除失败');
     }
+  };
+
+  const openEditModal = (record: MomentItem) => {
+    setEditingMoment(record);
+    const imgList = parseImages(record.images);
+    form.setFieldsValue({
+      content: record.content,
+      images: imgList.join('\n'),
+    });
+    setModalVisible(true);
+  };
+
+  const openCreateModal = () => {
+    setEditingMoment(null);
+    form.resetFields();
+    setModalVisible(true);
+  };
+
+  const handleModalClose = () => {
+    setModalVisible(false);
+    setEditingMoment(null);
+    form.resetFields();
   };
 
   useEffect(() => {
@@ -132,18 +180,23 @@ const MomentManagePage: FC = () => {
     {
       title: '操作',
       key: 'action',
-      width: 100,
+      width: 140,
       render: (_, record) => (
-        <Popconfirm
-          title="确定删除吗？"
-          onConfirm={() => handleDelete(record.id)}
-          okText="确定"
-          cancelText="取消"
-        >
-          <Button type="link" danger size="small" icon={<DeleteOutlined />}>
-            删除
+        <Space>
+          <Button type="link" size="small" icon={<EditOutlined />} onClick={() => openEditModal(record)}>
+            编辑
           </Button>
-        </Popconfirm>
+          <Popconfirm
+            title="确定删除吗？"
+            onConfirm={() => handleDelete(record.id)}
+            okText="确定"
+            cancelText="取消"
+          >
+            <Button type="link" danger size="small" icon={<DeleteOutlined />}>
+              删除
+            </Button>
+          </Popconfirm>
+        </Space>
       ),
     },
   ];
@@ -151,11 +204,7 @@ const MomentManagePage: FC = () => {
   return (
     <Card>
       <div style={{ marginBottom: 16 }}>
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={() => setModalVisible(true)}
-        >
+        <Button type="primary" icon={<PlusOutlined />} onClick={openCreateModal}>
           发布说说
         </Button>
       </div>
@@ -169,12 +218,12 @@ const MomentManagePage: FC = () => {
       />
 
       <Modal
-        title="发布说说"
+        title={editingMoment ? '编辑说说' : '发布说说'}
         open={modalVisible}
-        onCancel={() => setModalVisible(false)}
+        onCancel={handleModalClose}
         footer={null}
       >
-        <Form form={form} onFinish={handleCreate} layout="vertical">
+        <Form form={form} onFinish={editingMoment ? handleEdit : handleCreate} layout="vertical">
           <Form.Item
             name="content"
             label="内容"
@@ -193,9 +242,9 @@ const MomentManagePage: FC = () => {
           <Form.Item>
             <Space>
               <Button type="primary" htmlType="submit">
-                发布
+                {editingMoment ? '更新' : '发布'}
               </Button>
-              <Button onClick={() => setModalVisible(false)}>取消</Button>
+              <Button onClick={handleModalClose}>取消</Button>
             </Space>
           </Form.Item>
         </Form>

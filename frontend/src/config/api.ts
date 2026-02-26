@@ -43,6 +43,7 @@ export const API = {
     },
     detail: (id: number) => `${API_BASE_URL}/api/moments/${id}`,
     create: `${API_BASE_URL}/api/moments`,
+    update: (id: number) => `${API_BASE_URL}/api/moments/${id}`,
     delete: (id: number) => `${API_BASE_URL}/api/moments/${id}`,
     like: (id: number) => `${API_BASE_URL}/api/moments/${id}/like`,
   },
@@ -84,6 +85,8 @@ export const API = {
     create: `${API_BASE_URL}/api/comments`,
     delete: (id: number) => `${API_BASE_URL}/api/comments/${id}`,
   },
+  
+  stats: `${API_BASE_URL}/api/stats`,
   
   health: `${API_BASE_URL}/api/health`,
 } as const;

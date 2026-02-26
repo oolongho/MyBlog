@@ -6,8 +6,10 @@ import {
   EyeOutlined,
   HeartOutlined,
   CommentOutlined,
+  LinkOutlined,
 } from '@ant-design/icons';
-import { API } from '../../config/api';
+import { API, fetchApi, fetchWithAuth } from '../../config/api';
+import { useAuth } from '../../hooks/useAuth';
 
 interface Stats {
   articleCount: number;
@@ -15,6 +17,8 @@ interface Stats {
   momentCount: number;
   totalLikes: number;
   commentCount: number;
+  friendCount: number;
+  galleryCount: number;
 }
 
 interface RecentArticle {
@@ -29,26 +33,19 @@ const DashboardPage: FC = () => {
   const [stats, setStats] = useState<Stats | null>(null);
   const [recentArticles, setRecentArticles] = useState<RecentArticle[]>([]);
   const [loading, setLoading] = useState(true);
+  const { token } = useAuth();
 
   useEffect(() => {
     const fetchData = async () => {
+      if (!token) return;
+      
       try {
-        const [articlesRes] = await Promise.all([
-          fetch(API.articles.list({ pageSize: 5 })),
+        const [statsData, articlesData] = await Promise.all([
+          fetchWithAuth<Stats>(API.stats, token),
+          fetchApi<{ data: RecentArticle[]; total: number }>(API.articles.list({ pageSize: 5 })),
         ]);
 
-        const articlesData = await articlesRes.json();
-
-        const articleCount = articlesData.total || 0;
-        const totalViews = articlesData.data?.reduce((sum: number, a: RecentArticle) => sum + a.views, 0) || 0;
-
-        setStats({
-          articleCount,
-          totalViews,
-          momentCount: 0,
-          totalLikes: 0,
-          commentCount: 0,
-        });
+        setStats(statsData);
         setRecentArticles(articlesData.data || []);
       } catch (error) {
         console.error('Failed to fetch dashboard data:', error);
@@ -58,14 +55,14 @@ const DashboardPage: FC = () => {
     };
 
     fetchData();
-  }, []);
+  }, [token]);
 
   return (
     <div>
       <h2 style={{ marginBottom: 24 }}>仪表盘</h2>
       
       <Row gutter={[16, 16]}>
-        <Col xs={24} sm={12} md={6}>
+        <Col xs={24} sm={12} md={6} lg={4}>
           <Card>
             {loading ? <Skeleton active /> : (
               <Statistic
@@ -77,7 +74,7 @@ const DashboardPage: FC = () => {
             )}
           </Card>
         </Col>
-        <Col xs={24} sm={12} md={6}>
+        <Col xs={24} sm={12} md={6} lg={4}>
           <Card>
             {loading ? <Skeleton active /> : (
               <Statistic
@@ -89,7 +86,7 @@ const DashboardPage: FC = () => {
             )}
           </Card>
         </Col>
-        <Col xs={24} sm={12} md={6}>
+        <Col xs={24} sm={12} md={6} lg={4}>
           <Card>
             {loading ? <Skeleton active /> : (
               <Statistic
@@ -101,7 +98,19 @@ const DashboardPage: FC = () => {
             )}
           </Card>
         </Col>
-        <Col xs={24} sm={12} md={6}>
+        <Col xs={24} sm={12} md={6} lg={4}>
+          <Card>
+            {loading ? <Skeleton active /> : (
+              <Statistic
+                title="总点赞数"
+                value={stats?.totalLikes || 0}
+                prefix={<HeartOutlined />}
+                valueStyle={{ color: '#ff4d4f' }}
+              />
+            )}
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} md={6} lg={4}>
           <Card>
             {loading ? <Skeleton active /> : (
               <Statistic
@@ -109,6 +118,18 @@ const DashboardPage: FC = () => {
                 value={stats?.commentCount || 0}
                 prefix={<CommentOutlined />}
                 valueStyle={{ color: '#faad14' }}
+              />
+            )}
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} md={6} lg={4}>
+          <Card>
+            {loading ? <Skeleton active /> : (
+              <Statistic
+                title="友链数量"
+                value={stats?.friendCount || 0}
+                prefix={<LinkOutlined />}
+                valueStyle={{ color: '#722ed1' }}
               />
             )}
           </Card>
