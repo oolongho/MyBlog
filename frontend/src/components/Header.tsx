@@ -131,14 +131,14 @@ const Header: FC<HeaderProps> = ({ theme, toggleTheme }) => {
                 }`}
               >
                 {user.avatar ? (
-                  <img src={user.avatar} alt={user.nickname || '用户'} className="w-6 h-6 rounded-full object-cover" />
+                  <img src={user.avatar} alt={user.nickname} className="w-6 h-6 rounded-full object-cover" />
                 ) : (
                   <span className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-xs font-medium">
-                    {(user.nickname || '用户').charAt(0).toUpperCase()}
+                    {user.nickname.charAt(0).toUpperCase()}
                   </span>
                 )}
                 <span className={`text-sm font-medium ${theme === 'light' ? 'text-gray-700' : 'text-gray-300'}`}>
-                  {user.nickname || '用户'}
+                  {user.nickname}
                 </span>
                 <svg className={`w-4 h-4 ${theme === 'light' ? 'text-gray-500' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -227,14 +227,14 @@ const Header: FC<HeaderProps> = ({ theme, toggleTheme }) => {
               <div className={`mt-4 pt-4 border-t ${theme === 'light' ? 'border-gray-200' : 'border-[#333]'}`}>
                 <div className="flex items-center gap-2 mb-3">
                   {user.avatar ? (
-                    <img src={user.avatar} alt={user.nickname || '用户'} className="w-8 h-8 rounded-full object-cover" />
+                    <img src={user.avatar} alt={user.nickname} className="w-8 h-8 rounded-full object-cover" />
                   ) : (
                     <span className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-sm font-medium">
-                      {(user.nickname || '用户').charAt(0).toUpperCase()}
+                      {user.nickname.charAt(0).toUpperCase()}
                     </span>
                   )}
                   <span className={`font-medium ${theme === 'light' ? 'text-gray-700' : 'text-gray-300'}`}>
-                    {user.nickname || '用户'}
+                    {user.nickname}
                   </span>
                 </div>
                 <button

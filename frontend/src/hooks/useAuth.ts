@@ -10,6 +10,36 @@ interface User {
   role: 'admin' | 'visitor';
 }
 
+interface SafeUser {
+  id: number;
+  username: string;
+  nickname: string;
+  email: string;
+  avatar: string;
+  role: 'admin' | 'visitor';
+}
+
+const defaultUser: SafeUser = {
+  id: 0,
+  username: '',
+  nickname: '用户',
+  email: '',
+  avatar: '',
+  role: 'visitor',
+};
+
+const getSafeUser = (user: User | null): SafeUser => {
+  if (!user) return defaultUser;
+  return {
+    id: user.id,
+    username: user.username || '',
+    nickname: user.nickname || '用户',
+    email: user.email || '',
+    avatar: user.avatar || '',
+    role: user.role,
+  };
+};
+
 interface AuthState {
   user: User | null;
   token: string | null;
@@ -62,5 +92,7 @@ export const useAuth = () => {
     }
   };
 
-  return { user, token, isAuthenticated, login, logout, updateUser, checkAuth };
+  const safeUser = getSafeUser(user);
+
+  return { user: safeUser, token, isAuthenticated, login, logout, updateUser, checkAuth };
 };
