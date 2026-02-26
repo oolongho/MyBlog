@@ -46,6 +46,7 @@ export const API = {
     update: (id: number) => `${API_BASE_URL}/api/moments/${id}`,
     delete: (id: number) => `${API_BASE_URL}/api/moments/${id}`,
     like: (id: number) => `${API_BASE_URL}/api/moments/${id}/like`,
+    liked: `${API_BASE_URL}/api/moments/liked`,
   },
   
   gallery: {

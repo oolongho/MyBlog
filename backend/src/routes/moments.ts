@@ -8,6 +8,19 @@ const createMomentSchema = z.object({
 });
 
 export default async function momentRoutes(fastify: FastifyInstance) {
+  fastify.get('/liked', {
+    onRequest: [fastify.authenticate],
+  }, async (request) => {
+    const visitorId = request.user!.id;
+    
+    const likes = await prisma.like.findMany({
+      where: { visitorId },
+      select: { momentId: true },
+    });
+    
+    return likes.map(l => l.momentId);
+  });
+
   fastify.get('/', async (request) => {
     const query = z.object({
       page: z.coerce.number().int().min(1).default(1),

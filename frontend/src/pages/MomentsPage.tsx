@@ -31,18 +31,25 @@ const MomentsPage: FC = () => {
   const { isAuthenticated, token } = useAuth();
 
   useEffect(() => {
-    const fetchMoments = async () => {
+    const fetchData = async () => {
       try {
-        const data = await fetchApi<MomentWithComments[]>(API.moments.list({ pageSize: 50 }));
-        setMoments(data || []);
+        const [momentsData, likedData] = await Promise.all([
+          fetchApi<MomentWithComments[]>(API.moments.list({ pageSize: 50 })),
+          isAuthenticated && token
+            ? fetchWithAuth<number[]>(API.moments.liked, token).catch(() => [])
+            : Promise.resolve([]),
+        ]);
+        
+        setMoments(momentsData || []);
+        setLikedMoments(new Set(likedData));
       } catch (error) {
         console.error('Failed to fetch moments:', error);
       } finally {
         setLoading(false);
       }
     };
-    fetchMoments();
-  }, []);
+    fetchData();
+  }, [isAuthenticated, token]);
 
   const handleLike = useCallback(async (id: number) => {
     if (!isAuthenticated || !token) {
@@ -51,9 +58,8 @@ const MomentsPage: FC = () => {
     }
 
     try {
-      const result = await fetchApi<{ liked: boolean }>(API.moments.like(id), {
+      const result = await fetchWithAuth<{ liked: boolean }>(API.moments.like(id), token!, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
       });
 
       setLikedMoments(prev => {
