@@ -22,13 +22,12 @@ interface Settings {
   siteTitle: string;
   siteDescription: string;
   siteKeywords: string;
-  siteAvatar: string;
-  siteFavicon: string;
   footerText: string;
   announcement: string;
   profileNickname: string;
   profileTitle: string;
   profileBio: string;
+  profileSkills: string;
   profileHobbies: string;
   profileSocialLinks: string;
   timelineItems: string;
@@ -54,13 +53,12 @@ const SettingsPage: FC = () => {
           siteTitle: data.siteTitle,
           siteDescription: data.siteDescription,
           siteKeywords: data.siteKeywords,
-          siteAvatar: data.siteAvatar,
-          siteFavicon: data.siteFavicon,
           footerText: data.footerText,
           announcement: data.announcement,
           profileNickname: data.profileNickname,
           profileTitle: data.profileTitle,
           profileBio: data.profileBio,
+          profileSkills: data.profileSkills,
           profileHobbies: data.profileHobbies,
           footerSiteName: data.footerSiteName,
           footerDescription: data.footerDescription,
@@ -159,20 +157,16 @@ const SettingsPage: FC = () => {
           <Input placeholder="My Blog" />
         </Form.Item>
 
-        <Form.Item name="siteDescription" label="网站描述">
-          <Input.TextArea rows={2} placeholder="网站简介，用于 SEO" />
+        <Form.Item name="siteDescription" label="网站描述（用于 SEO）">
+          <Input.TextArea rows={2} placeholder="网站简介，用于搜索引擎优化" />
         </Form.Item>
 
-        <Form.Item name="siteKeywords" label="网站关键词">
+        <Form.Item name="siteKeywords" label="网站关键词（用于 SEO）">
           <Input placeholder="博客,技术,分享" />
         </Form.Item>
 
-        <Form.Item name="siteAvatar" label="网站头像 URL">
-          <Input placeholder="https://example.com/avatar.png" />
-        </Form.Item>
-
-        <Form.Item name="siteFavicon" label="Favicon URL">
-          <Input placeholder="https://example.com/favicon.ico" />
+        <Form.Item name="announcement" label="公告（显示在首页顶部）">
+          <Input.TextArea rows={3} placeholder="网站公告，显示在首页顶部" />
         </Form.Item>
 
         <Divider>个人信息</Divider>
@@ -187,6 +181,10 @@ const SettingsPage: FC = () => {
 
         <Form.Item name="profileBio" label="关于我">
           <Input.TextArea rows={5} placeholder="个人介绍..." />
+        </Form.Item>
+
+        <Form.Item name="profileSkills" label="技能标签（逗号分隔）">
+          <Input placeholder="前端开发,React,TypeScript" />
         </Form.Item>
 
         <Form.Item name="profileHobbies" label="爱好（逗号分隔）">
@@ -290,14 +288,8 @@ const SettingsPage: FC = () => {
           <Input.TextArea rows={2} placeholder="一个简洁的个人博客，记录生活、分享技术。" />
         </Form.Item>
 
-        <Form.Item name="footerText" label="版权信息">
+        <Form.Item name="footerText" label="版权信息（留空则自动生成）">
           <Input placeholder="© 2024 My Blog. All rights reserved." />
-        </Form.Item>
-
-        <Divider>其他设置</Divider>
-
-        <Form.Item name="announcement" label="公告">
-          <Input.TextArea rows={3} placeholder="网站公告，显示在首页顶部" />
         </Form.Item>
 
         <Form.Item>

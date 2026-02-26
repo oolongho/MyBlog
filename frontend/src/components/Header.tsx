@@ -1,7 +1,12 @@
 import type { FC } from 'react';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { API, fetchApi } from '../config/api';
+
+interface Settings {
+  siteTitle: string;
+}
 
 interface HeaderProps {
   theme: 'light' | 'dark';
@@ -39,8 +44,24 @@ const ThemeToggleButton: FC<ThemeToggleButtonProps> = ({ theme, toggleTheme }) =
 const Header: FC<HeaderProps> = ({ theme, toggleTheme }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [siteTitle, setSiteTitle] = useState('My Blog');
   const { isAuthenticated, user, logout } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const data = await fetchApi<Settings>(API.settings.public);
+        if (data.siteTitle) {
+          setSiteTitle(data.siteTitle);
+        }
+      } catch (error) {
+        console.error('Failed to fetch settings:', error);
+      }
+    };
+
+    fetchSettings();
+  }, []);
 
   const navLinkClass = useCallback(({ isActive }: { isActive: boolean }) =>
     `relative px-4 py-2 rounded-full font-medium transition-all duration-300 ${
@@ -80,10 +101,10 @@ const Header: FC<HeaderProps> = ({ theme, toggleTheme }) => {
     }`}>
       <div className="container mx-auto px-4 md:px-6 py-4 flex justify-between items-center">
         <Link to="/" className="text-2xl font-bold flex items-center group" aria-label="返回首页">
-          <img src="/logo.png" alt="My Blog Logo" className="w-10 h-10 object-contain mr-3" loading="lazy" />
+          <img src="/logo.png" alt={`${siteTitle} Logo`} className="w-10 h-10 object-contain mr-3" loading="lazy" />
           <span className={`group-hover:text-primary transition-all duration-300 ${
             theme === 'light' ? 'text-gray-900' : 'text-white'
-          }`}>My Blog</span>
+          }`}>{siteTitle}</span>
         </Link>
         
         <nav className="hidden md:flex items-center gap-2" aria-label="主导航">
@@ -110,14 +131,14 @@ const Header: FC<HeaderProps> = ({ theme, toggleTheme }) => {
                 }`}
               >
                 {user.avatar ? (
-                  <img src={user.avatar} alt={user.nickname} className="w-6 h-6 rounded-full object-cover" />
+                  <img src={user.avatar} alt={user.nickname || '用户'} className="w-6 h-6 rounded-full object-cover" />
                 ) : (
                   <span className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-xs font-medium">
-                    {user.nickname.charAt(0).toUpperCase()}
+                    {(user.nickname || '用户').charAt(0).toUpperCase()}
                   </span>
                 )}
                 <span className={`text-sm font-medium ${theme === 'light' ? 'text-gray-700' : 'text-gray-300'}`}>
-                  {user.nickname}
+                  {user.nickname || '用户'}
                 </span>
                 <svg className={`w-4 h-4 ${theme === 'light' ? 'text-gray-500' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -206,14 +227,14 @@ const Header: FC<HeaderProps> = ({ theme, toggleTheme }) => {
               <div className={`mt-4 pt-4 border-t ${theme === 'light' ? 'border-gray-200' : 'border-[#333]'}`}>
                 <div className="flex items-center gap-2 mb-3">
                   {user.avatar ? (
-                    <img src={user.avatar} alt={user.nickname} className="w-8 h-8 rounded-full object-cover" />
+                    <img src={user.avatar} alt={user.nickname || '用户'} className="w-8 h-8 rounded-full object-cover" />
                   ) : (
                     <span className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-sm font-medium">
-                      {user.nickname.charAt(0).toUpperCase()}
+                      {(user.nickname || '用户').charAt(0).toUpperCase()}
                     </span>
                   )}
                   <span className={`font-medium ${theme === 'light' ? 'text-gray-700' : 'text-gray-300'}`}>
-                    {user.nickname}
+                    {user.nickname || '用户'}
                   </span>
                 </div>
                 <button

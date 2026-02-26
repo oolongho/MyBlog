@@ -13,6 +13,7 @@ interface SocialLink {
 interface Settings {
   footerSiteName: string;
   footerDescription: string;
+  footerText: string;
   profileSocialLinks: string;
 }
 
@@ -23,6 +24,7 @@ interface FooterProps {
 const defaultSettings: Settings = {
   footerSiteName: 'My Blog',
   footerDescription: '一个简洁的个人博客，记录生活、分享技术。',
+  footerText: '',
   profileSocialLinks: '[]',
 };
 
@@ -147,7 +149,7 @@ const Footer: FC<FooterProps> = ({ theme }) => {
             </div>
             
             <p className="text-sm text-gray-500">
-              © {currentYear} {settings.footerSiteName}. All rights reserved.
+              {settings.footerText || `© ${currentYear} ${settings.footerSiteName}. All rights reserved.`}
             </p>
           </div>
         </div>

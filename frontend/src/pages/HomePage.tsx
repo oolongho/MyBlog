@@ -5,24 +5,41 @@ import type { Article, Moment, FriendLink } from '../types';
 import { API, fetchApi } from '../config/api';
 import { formatRelativeTime } from '../utils/date';
 
+interface Settings {
+  profileNickname: string;
+  profileTitle: string;
+  profileSkills: string;
+  announcement: string;
+}
+
+const defaultSettings: Settings = {
+  profileNickname: 'oolongho',
+  profileTitle: '一个热爱技术、热爱生活的开发者',
+  profileSkills: '前端开发,React,TypeScript',
+  announcement: '',
+};
+
 const HomePage: FC = () => {
   const [articles, setArticles] = useState<Article[]>([]);
   const [moments, setMoments] = useState<Moment[]>([]);
   const [friends, setFriends] = useState<FriendLink[]>([]);
+  const [settings, setSettings] = useState<Settings>(defaultSettings);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [articlesRes, momentsRes, friendsRes] = await Promise.all([
+        const [articlesRes, momentsRes, friendsRes, settingsRes] = await Promise.all([
           fetchApi<{ data: Article[] }>(API.articles.list({ pageSize: 3 })),
           fetchApi<Moment[]>(API.moments.list({ pageSize: 3 })),
           fetchApi<FriendLink[]>(API.friends.list),
+          fetchApi<Settings>(API.settings.public),
         ]);
         
         setArticles(articlesRes.data || []);
         setMoments(momentsRes || []);
         setFriends(friendsRes || []);
+        setSettings({ ...defaultSettings, ...settingsRes });
       } catch (error) {
         console.error('Failed to fetch homepage data:', error);
       } finally {
@@ -45,19 +62,32 @@ const HomePage: FC = () => {
     );
   }
 
+  const skills = settings.profileSkills.split(',').map(s => s.trim()).filter(Boolean);
+
   return (
     <div className="min-h-screen py-8">
       <div className="container mx-auto px-6 max-w-6xl">
+        {settings.announcement && (
+          <div className="mb-6 p-4 bg-primary/10 border border-primary/20 rounded-lg">
+            <div className="flex items-center gap-2">
+              <svg className="w-5 h-5 text-primary flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
+              </svg>
+              <p className="text-primary font-medium whitespace-pre-line">{settings.announcement}</p>
+            </div>
+          </div>
+        )}
+        
         <section className="mb-12" aria-labelledby="profile-heading">
           <div className="card p-8 flex flex-col md:flex-row items-center gap-6">
-            <img src="/logo.png" alt="oolongho 的头像" className="w-24 h-24 object-contain" loading="lazy" />
+            <img src="/logo.png" alt={`${settings.profileNickname} 的头像`} className="w-24 h-24 object-contain" loading="lazy" />
             <div className="text-center md:text-left">
-              <h1 id="profile-heading" className="text-2xl font-bold text-[var(--text-primary)] mb-2">Hello, I'm oolongho</h1>
-              <p className="text-[var(--text-secondary)] mb-4">一个热爱技术、热爱生活的开发者</p>
+              <h1 id="profile-heading" className="text-2xl font-bold text-[var(--text-primary)] mb-2">Hello, I'm {settings.profileNickname}</h1>
+              <p className="text-[var(--text-secondary)] mb-4">{settings.profileTitle}</p>
               <div className="flex flex-wrap justify-center md:justify-start gap-2" role="list" aria-label="技能标签">
-                <span role="listitem" className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm">前端开发</span>
-                <span role="listitem" className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm">React</span>
-                <span role="listitem" className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm">TypeScript</span>
+                {skills.map((skill) => (
+                  <span key={skill} role="listitem" className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm">{skill}</span>
+                ))}
               </div>
             </div>
           </div>
