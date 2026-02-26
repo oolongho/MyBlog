@@ -1,5 +1,5 @@
 import type { FC } from 'react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Layout, Menu, Button, Avatar, Dropdown, theme } from 'antd';
 import {
   DashboardOutlined,
@@ -15,19 +15,42 @@ import {
 } from '@ant-design/icons';
 import { useNavigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import { API, fetchApi } from '../../config/api';
 
 const { Header, Sider, Content } = Layout;
+
+interface Settings {
+  siteTitle: string;
+}
 
 interface AdminLayoutProps {
   children?: React.ReactNode;
 }
 
+const defaultSettings: Settings = {
+  siteTitle: 'MyBlog',
+};
+
 const AdminLayout: FC<AdminLayoutProps> = () => {
   const [collapsed, setCollapsed] = useState(false);
+  const [settings, setSettings] = useState<Settings>(defaultSettings);
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth();
   const { token: { borderRadiusLG } } = theme.useToken();
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const data = await fetchApi<Settings>(API.settings.public);
+        setSettings({ ...defaultSettings, ...data });
+      } catch (error) {
+        console.error('Failed to fetch settings:', error);
+      }
+    };
+
+    fetchSettings();
+  }, []);
 
   const menuItems = [
     { key: '/admin', icon: <DashboardOutlined />, label: '仪表盘' },
@@ -81,9 +104,9 @@ const AdminLayout: FC<AdminLayoutProps> = () => {
           borderBottom: '1px solid #303030'
         }}>
           {collapsed ? (
-            <span style={{ fontSize: 20, fontWeight: 'bold', color: '#1890ff' }}>M</span>
+            <span style={{ fontSize: 20, fontWeight: 'bold', color: '#1890ff' }}>{settings.siteTitle.charAt(0)}</span>
           ) : (
-            <span style={{ fontSize: 18, fontWeight: 'bold', color: '#fff' }}>MyBlog</span>
+            <span style={{ fontSize: 18, fontWeight: 'bold', color: '#fff' }}>{settings.siteTitle}</span>
           )}
         </div>
         <Menu
