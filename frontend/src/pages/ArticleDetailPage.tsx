@@ -16,7 +16,7 @@ interface Article {
   createdAt: string;
 }
 
-interface Comment {
+interface Reply {
   id: number;
   content: string;
   createdAt: string;
@@ -27,6 +27,18 @@ interface Comment {
   };
 }
 
+interface Comment {
+  id: number;
+  content: string;
+  createdAt: string;
+  visitor: {
+    id: number;
+    nickname: string;
+    avatar?: string;
+  };
+  replies?: Reply[];
+}
+
 const ArticleDetailPage: FC = () => {
   const { id } = useParams<{ id: string }>();
   const [article, setArticle] = useState<Article | null>(null);
@@ -35,6 +47,8 @@ const ArticleDetailPage: FC = () => {
   const [comment, setComment] = useState('');
   const [comments, setComments] = useState<Comment[]>([]);
   const [commentsLoading, setCommentsLoading] = useState(false);
+  const [replyingTo, setReplyingTo] = useState<number | null>(null);
+  const [replyContent, setReplyContent] = useState('');
   const { isAuthenticated, token } = useAuth();
 
   const fetchArticle = useCallback(async () => {
@@ -91,6 +105,38 @@ const ArticleDetailPage: FC = () => {
       setComment('');
     } catch (err) {
       alert('评论失败，请稍后重试');
+    }
+  };
+
+  const handleSubmitReply = async (parentId: number) => {
+    if (!replyContent.trim()) return;
+    
+    if (!isAuthenticated || !token) {
+      alert('请先登录');
+      return;
+    }
+
+    try {
+      const newReply = await fetchWithAuth<Reply>(API.comments.create, token!, {
+        method: 'POST',
+        body: JSON.stringify({
+          content: replyContent.trim(),
+          articleId: Number(id),
+          parentId,
+        }),
+      });
+      
+      setComments(prev => prev.map(c => {
+        if (c.id === parentId) {
+          return { ...c, replies: [...(c.replies || []), newReply] };
+        }
+        return c;
+      }));
+      
+      setReplyingTo(null);
+      setReplyContent('');
+    } catch (err) {
+      alert('回复失败，请稍后重试');
     }
   };
 
@@ -214,7 +260,61 @@ const ArticleDetailPage: FC = () => {
                     </div>
                     <span className="text-xs text-[var(--text-secondary)]">{formatRelativeTime(c.createdAt)}</span>
                   </div>
-                  <p className="text-[var(--text-secondary)]">{c.content}</p>
+                  <p className="text-[var(--text-secondary)] mb-2">{c.content}</p>
+                  
+                  <button
+                    type="button"
+                    onClick={() => setReplyingTo(replyingTo === c.id ? null : c.id)}
+                    className="text-xs text-primary hover:underline"
+                  >
+                    {replyingTo === c.id ? '取消回复' : '回复'}
+                  </button>
+                  
+                  {c.replies && c.replies.length > 0 && (
+                    <div className="mt-3 ml-4 space-y-2 border-l-2 border-[var(--border-color)] pl-3">
+                      {c.replies.map((reply) => (
+                        <div key={reply.id} className="py-2">
+                          <div className="flex items-center gap-2 mb-1">
+                            {reply.visitor.avatar ? (
+                              <img 
+                                src={reply.visitor.avatar} 
+                                alt={reply.visitor.nickname}
+                                className="w-5 h-5 rounded-full object-cover"
+                              />
+                            ) : (
+                              <span className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center text-xs">
+                                {reply.visitor.nickname.charAt(0).toUpperCase()}
+                              </span>
+                            )}
+                            <span className="font-medium text-sm text-[var(--text-primary)]">{reply.visitor.nickname}</span>
+                            <span className="text-xs text-[var(--text-secondary)]">{formatRelativeTime(reply.createdAt)}</span>
+                          </div>
+                          <p className="text-sm text-[var(--text-secondary)]">{reply.content}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  
+                  {replyingTo === c.id && (
+                    <div className="mt-3 flex gap-2">
+                      <input
+                        type="text"
+                        value={replyContent}
+                        onChange={(e) => setReplyContent(e.target.value)}
+                        placeholder="写下你的回复..."
+                        className="input-field flex-1 text-sm"
+                        disabled={!isAuthenticated}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleSubmitReply(c.id)}
+                        className="btn-primary text-sm px-3"
+                        disabled={!isAuthenticated || !replyContent.trim()}
+                      >
+                        发送
+                      </button>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

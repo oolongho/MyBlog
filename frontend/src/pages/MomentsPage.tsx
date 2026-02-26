@@ -5,6 +5,17 @@ import { API, fetchApi, fetchWithAuth } from '../config/api';
 import { useAuth } from '../hooks/useAuth';
 import { formatRelativeTime } from '../utils/date';
 
+interface Reply {
+  id: number;
+  content: string;
+  createdAt: string;
+  visitor: {
+    id: number;
+    nickname: string;
+    avatar?: string;
+  };
+}
+
 interface Comment {
   id: number;
   content: string;
@@ -14,6 +25,7 @@ interface Comment {
     nickname: string;
     avatar?: string;
   };
+  replies?: Reply[];
 }
 
 interface MomentWithComments extends Moment {
@@ -28,6 +40,8 @@ const MomentsPage: FC = () => {
   const [expandedComments, setExpandedComments] = useState<Set<number>>(new Set());
   const [commentInputs, setCommentInputs] = useState<Record<number, string>>({});
   const [commentsData, setCommentsData] = useState<Record<number, Comment[]>>({});
+  const [replyingTo, setReplyingTo] = useState<Record<number, number | null>>({});
+  const [replyInputs, setReplyInputs] = useState<Record<string, string>>({});
   const { isAuthenticated, token } = useAuth();
 
   useEffect(() => {
@@ -103,8 +117,11 @@ const MomentsPage: FC = () => {
     }
   }, [expandedComments, commentsData]);
 
-  const handleSubmitComment = useCallback(async (momentId: number) => {
-    const content = commentInputs[momentId]?.trim();
+  const handleSubmitComment = useCallback(async (momentId: number, parentId?: number) => {
+    const content = parentId 
+      ? replyInputs[`${momentId}-${parentId}`]?.trim()
+      : commentInputs[momentId]?.trim();
+    
     if (!content) return;
     
     if (!isAuthenticated || !token) {
@@ -118,14 +135,29 @@ const MomentsPage: FC = () => {
         body: JSON.stringify({
           content,
           momentId,
+          parentId,
         }),
       });
       
-      setCommentsData(prev => ({
-        ...prev,
-        [momentId]: [newComment, ...(prev[momentId] || [])],
-      }));
-      setCommentInputs(prev => ({ ...prev, [momentId]: '' }));
+      if (parentId) {
+        setCommentsData(prev => ({
+          ...prev,
+          [momentId]: prev[momentId]?.map(c => {
+            if (c.id === parentId) {
+              return { ...c, replies: [...(c.replies || []), newComment] };
+            }
+            return c;
+          }) || [],
+        }));
+        setReplyInputs(prev => ({ ...prev, [`${momentId}-${parentId}`]: '' }));
+        setReplyingTo(prev => ({ ...prev, [momentId]: null }));
+      } else {
+        setCommentsData(prev => ({
+          ...prev,
+          [momentId]: [newComment, ...(prev[momentId] || [])],
+        }));
+        setCommentInputs(prev => ({ ...prev, [momentId]: '' }));
+      }
       
       setMoments(prev => prev.map(m => {
         if (m.id === momentId) {
@@ -136,7 +168,7 @@ const MomentsPage: FC = () => {
     } catch (error) {
       alert('评论失败，请稍后重试');
     }
-  }, [commentInputs, isAuthenticated, token]);
+  }, [commentInputs, replyInputs, isAuthenticated, token]);
 
   if (loading) {
     return (
@@ -249,25 +281,82 @@ const MomentsPage: FC = () => {
                     {comments.length > 0 ? (
                       <div className="space-y-3">
                         {comments.map((c) => (
-                          <div key={c.id} className="flex items-start gap-2">
-                            {c.visitor.avatar ? (
-                              <img 
-                                src={c.visitor.avatar} 
-                                alt={c.visitor.nickname}
-                                className="w-6 h-6 rounded-full object-cover flex-shrink-0"
-                              />
-                            ) : (
-                              <span className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-xs flex-shrink-0">
-                                {c.visitor.nickname.charAt(0).toUpperCase()}
-                              </span>
-                            )}
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2">
-                                <span className="font-medium text-sm text-[var(--text-primary)]">{c.visitor.nickname}</span>
-                                <span className="text-xs text-[var(--text-secondary)]">{formatRelativeTime(c.createdAt)}</span>
+                          <div key={c.id}>
+                            <div className="flex items-start gap-2">
+                              {c.visitor.avatar ? (
+                                <img 
+                                  src={c.visitor.avatar} 
+                                  alt={c.visitor.nickname}
+                                  className="w-6 h-6 rounded-full object-cover flex-shrink-0"
+                                />
+                              ) : (
+                                <span className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-xs flex-shrink-0">
+                                  {c.visitor.nickname.charAt(0).toUpperCase()}
+                                </span>
+                              )}
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <span className="font-medium text-sm text-[var(--text-primary)]">{c.visitor.nickname}</span>
+                                  <span className="text-xs text-[var(--text-secondary)]">{formatRelativeTime(c.createdAt)}</span>
+                                </div>
+                                <p className="text-sm text-[var(--text-secondary)]">{c.content}</p>
+                                <button
+                                  type="button"
+                                  onClick={() => setReplyingTo(prev => ({ ...prev, [moment.id]: replyingTo[moment.id] === c.id ? null : c.id }))}
+                                  className="text-xs text-primary hover:underline mt-1"
+                                >
+                                  {replyingTo[moment.id] === c.id ? '取消回复' : '回复'}
+                                </button>
                               </div>
-                              <p className="text-sm text-[var(--text-secondary)]">{c.content}</p>
                             </div>
+                            
+                            {c.replies && c.replies.length > 0 && (
+                              <div className="ml-8 mt-2 space-y-2 border-l-2 border-[var(--border-color)] pl-3">
+                                {c.replies.map((reply) => (
+                                  <div key={reply.id} className="flex items-start gap-2">
+                                    {reply.visitor.avatar ? (
+                                      <img 
+                                        src={reply.visitor.avatar} 
+                                        alt={reply.visitor.nickname}
+                                        className="w-5 h-5 rounded-full object-cover flex-shrink-0"
+                                      />
+                                    ) : (
+                                      <span className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center text-xs flex-shrink-0">
+                                        {reply.visitor.nickname.charAt(0).toUpperCase()}
+                                      </span>
+                                    )}
+                                    <div className="flex-1 min-w-0">
+                                      <div className="flex items-center gap-2">
+                                        <span className="font-medium text-xs text-[var(--text-primary)]">{reply.visitor.nickname}</span>
+                                        <span className="text-xs text-[var(--text-secondary)]">{formatRelativeTime(reply.createdAt)}</span>
+                                      </div>
+                                      <p className="text-xs text-[var(--text-secondary)]">{reply.content}</p>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                            
+                            {replyingTo[moment.id] === c.id && (
+                              <div className="ml-8 mt-2 flex gap-2">
+                                <input
+                                  type="text"
+                                  value={replyInputs[`${moment.id}-${c.id}`] || ''}
+                                  onChange={(e) => setReplyInputs(prev => ({ ...prev, [`${moment.id}-${c.id}`]: e.target.value }))}
+                                  placeholder="写下你的回复..."
+                                  className="input-field flex-1 text-sm"
+                                  disabled={!isAuthenticated}
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => handleSubmitComment(moment.id, c.id)}
+                                  className="btn-primary text-xs px-2"
+                                  disabled={!isAuthenticated || !(replyInputs[`${moment.id}-${c.id}`]?.trim())}
+                                >
+                                  发送
+                                </button>
+                              </div>
+                            )}
                           </div>
                         ))}
                       </div>

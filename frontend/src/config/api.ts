@@ -89,6 +89,13 @@ export const API = {
   
   stats: `${API_BASE_URL}/api/stats`,
   
+  settings: {
+    public: `${API_BASE_URL}/api/settings/public`,
+    all: `${API_BASE_URL}/api/settings`,
+    update: `${API_BASE_URL}/api/settings`,
+    updateKey: (key: string) => `${API_BASE_URL}/api/settings/${key}`,
+  },
+  
   health: `${API_BASE_URL}/api/health`,
 } as const;
 

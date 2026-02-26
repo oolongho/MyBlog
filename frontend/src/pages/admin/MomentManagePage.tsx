@@ -180,7 +180,7 @@ const MomentManagePage: FC = () => {
     {
       title: '操作',
       key: 'action',
-      width: 140,
+      width: 160,
       render: (_, record) => (
         <Space>
           <Button type="link" size="small" icon={<EditOutlined />} onClick={() => openEditModal(record)}>

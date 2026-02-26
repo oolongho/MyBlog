@@ -94,7 +94,7 @@ const CommentManagePage: FC = () => {
     {
       title: '操作',
       key: 'action',
-      width: 80,
+      width: 100,
       render: (_, record) => (
         <Popconfirm
           title="确定删除吗？"

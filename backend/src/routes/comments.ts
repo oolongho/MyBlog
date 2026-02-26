@@ -18,7 +18,7 @@ export default async function commentRoutes(fastify: FastifyInstance) {
       momentId: z.coerce.number().int().optional(),
     }).parse(request.query);
     
-    const where: Record<string, unknown> = {};
+    const where: Record<string, unknown> = { parentId: null };
     if (query.articleId) where.articleId = query.articleId;
     if (query.momentId) where.momentId = query.momentId;
     
@@ -31,6 +31,12 @@ export default async function commentRoutes(fastify: FastifyInstance) {
         visitor: { select: { id: true, nickname: true, avatar: true } },
         article: { select: { id: true, title: true } },
         moment: { select: { id: true } },
+        replies: {
+          orderBy: { createdAt: 'asc' },
+          include: {
+            visitor: { select: { id: true, nickname: true, avatar: true } },
+          },
+        },
       },
     });
     
@@ -47,6 +53,7 @@ export default async function commentRoutes(fastify: FastifyInstance) {
         visitor: { select: { id: true, nickname: true, avatar: true } },
         article: { select: { id: true, title: true } },
         moment: { select: { id: true } },
+        parent: { select: { id: true } },
       },
     });
     
@@ -84,6 +91,17 @@ export default async function commentRoutes(fastify: FastifyInstance) {
       }
       
       visitorId = visitor.id;
+    }
+    
+    if (body.parentId) {
+      const parentComment = await prisma.comment.findUnique({
+        where: { id: body.parentId },
+      });
+      
+      if (!parentComment) {
+        reply.code(400);
+        return { error: '父评论不存在' };
+      }
     }
     
     const comment = await prisma.comment.create({

@@ -13,6 +13,7 @@ import galleryRoutes from './routes/gallery.js';
 import friendRoutes from './routes/friends.js';
 import commentRoutes from './routes/comments.js';
 import statsRoutes from './routes/stats.js';
+import settingsRoutes from './routes/settings.js';
 
 const fastify = Fastify({
   logger: {
@@ -41,6 +42,7 @@ await fastify.register(galleryRoutes, { prefix: '/api/gallery' });
 await fastify.register(friendRoutes, { prefix: '/api/friends' });
 await fastify.register(commentRoutes, { prefix: '/api/comments' });
 await fastify.register(statsRoutes, { prefix: '/api/stats' });
+await fastify.register(settingsRoutes, { prefix: '/api/settings' });
 
 fastify.get('/api/health', async () => ({ status: 'ok', timestamp: new Date().toISOString() }));
 

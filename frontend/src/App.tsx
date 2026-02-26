@@ -26,6 +26,7 @@ const MomentManagePage = lazy(() => import('./pages/admin/MomentManagePage'));
 const GalleryManagePage = lazy(() => import('./pages/admin/GalleryManagePage'));
 const FriendManagePage = lazy(() => import('./pages/admin/FriendManagePage'));
 const CommentManagePage = lazy(() => import('./pages/admin/CommentManagePage'));
+const SettingsPage = lazy(() => import('./pages/admin/SettingsPage'));
 
 const App: FC = () => {
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
@@ -120,6 +121,7 @@ const App: FC = () => {
           <Route path="gallery" element={<GalleryManagePage />} />
           <Route path="friends" element={<FriendManagePage />} />
           <Route path="comments" element={<CommentManagePage />} />
+          <Route path="settings" element={<SettingsPage />} />
         </Route>
       </Routes>
     </Router>
