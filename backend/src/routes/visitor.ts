@@ -105,7 +105,7 @@ export default async function visitorRoutes(fastify: FastifyInstance) {
 
   fastify.get('/profile', {
     onRequest: [fastify.authenticate],
-  }, async (request) => {
+  }, async (request, reply) => {
     if (request.user!.role !== 'visitor') {
       return reply.code(403).send({ error: '无权限' });
     }
