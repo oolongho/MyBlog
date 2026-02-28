@@ -137,4 +137,40 @@ export default async function visitorRoutes(fastify: FastifyInstance) {
     
     return visitor;
   });
+
+  fastify.put('/password', {
+    onRequest: [fastify.authenticate],
+  }, async (request, reply) => {
+    if (request.user!.role !== 'visitor') {
+      return reply.code(403).send({ error: '无权限' });
+    }
+    
+    const body = z.object({
+      oldPassword: z.string().min(6),
+      newPassword: z.string().min(6),
+    }).parse(request.body);
+    
+    const visitor = await prisma.visitor.findUnique({
+      where: { id: request.user!.id },
+      select: { id: true, password: true },
+    });
+    
+    if (!visitor || !visitor.password) {
+      return reply.code(400).send({ error: '账户异常' });
+    }
+    
+    const valid = await bcrypt.compare(body.oldPassword, visitor.password);
+    if (!valid) {
+      return reply.code(400).send({ error: '旧密码错误' });
+    }
+    
+    const hashedPassword = await bcrypt.hash(body.newPassword, 10);
+    
+    await prisma.visitor.update({
+      where: { id: request.user!.id },
+      data: { password: hashedPassword },
+    });
+    
+    return { success: true };
+  });
 }

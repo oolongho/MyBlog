@@ -149,6 +149,17 @@ const Header: FC<HeaderProps> = ({ theme, toggleTheme }) => {
                 <div className={`absolute right-0 mt-2 w-40 rounded-lg shadow-lg py-1 ${
                   theme === 'light' ? 'bg-white border border-gray-200' : 'bg-[#2a2a2a] border border-[#333]'
                 }`}>
+                  <Link
+                    to="/profile"
+                    onClick={() => setIsUserMenuOpen(false)}
+                    className={`block px-4 py-2 text-sm transition-colors ${
+                      theme === 'light' 
+                        ? 'text-gray-700 hover:bg-gray-100' 
+                        : 'text-gray-300 hover:bg-[#333]'
+                    }`}
+                  >
+                    个人资料
+                  </Link>
                   <button
                     type="button"
                     onClick={handleLogout}
@@ -237,6 +248,17 @@ const Header: FC<HeaderProps> = ({ theme, toggleTheme }) => {
                     {user.nickname}
                   </span>
                 </div>
+                <Link
+                  to="/profile"
+                  onClick={handleCloseMenu}
+                  className={`block px-4 py-2 rounded-lg text-sm transition-colors ${
+                    theme === 'light' 
+                      ? 'text-gray-700 hover:bg-gray-100' 
+                      : 'text-gray-300 hover:bg-[#333]'
+                  }`}
+                >
+                  个人资料
+                </Link>
                 <button
                   type="button"
                   onClick={handleLogout}

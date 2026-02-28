@@ -14,6 +14,8 @@ export const API = {
     register: `${API_BASE_URL}/api/visitor/register`,
     login: `${API_BASE_URL}/api/visitor/login`,
     profile: `${API_BASE_URL}/api/visitor/profile`,
+    updateProfile: `${API_BASE_URL}/api/visitor/profile`,
+    updatePassword: `${API_BASE_URL}/api/visitor/password`,
   },
   
   articles: {
