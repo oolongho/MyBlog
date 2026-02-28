@@ -4,7 +4,7 @@
 @theme {
   --color-primary: #00cc66;
   --color-primary-light: #00ff66;
-  --color-primary-dark: #00b85c;
+  --color-primary-dark: #008833;
 }
 
 @layer base {
