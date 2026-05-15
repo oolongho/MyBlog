@@ -14,7 +14,7 @@ function getMdFiles(dir: string): string[] {
 }
 
 function formatDate(d: unknown): string {
-  if (!d) return ''
+  if (d == null) return ''
   if (d instanceof Date) return d.toISOString().slice(0, 10)
   return String(d)
 }
