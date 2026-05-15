@@ -1,27 +1,27 @@
 # Tasks
 
 ## Phase 1: 项目初始化
-- [ ] Task 1: 初始化 Vite + React + TypeScript 项目
-  - [ ] 使用 pnpm create vite 初始化项目（React + TypeScript 模板）
-  - [ ] 配置 tsconfig.json（路径别名 @/ 等）
-  - [ ] 配置 vite.config.ts 基础设置
+- [x] Task 1: 初始化 Vite + React + TypeScript 项目
+  - [x] 使用 pnpm create vite 初始化项目（React + TypeScript 模板）
+  - [x] 配置 tsconfig.json（路径别名 @/ 等）
+  - [x] 配置 vite.config.ts 基础设置
 
 ## Phase 2: SSG 框架集成
-- [ ] Task 2: 集成 Vike 作为 SSG 框架
-  - [ ] 安装 vike 及相关依赖
-  - [ ] 配置 Vike SSG 渲染器（renderer/）
-  - [ ] 创建基础页面文件结构（pages/）
-  - [ ] 验证 SSG 构建和客户端水合正常工作
+- [x] Task 2: 集成 Vike 作为 SSG 框架
+  - [x] 安装 vike 及 vike-react 依赖
+  - [x] 配置 Vike SSG（+config.ts 继承 vike-react + prerender）
+  - [x] 创建基础页面文件结构（pages/）
+  - [x] 验证 SSG 构建和客户端水合正常工作
 
 ## Phase 3: 样式与主题系统
-- [ ] Task 3: 集成 Tailwind CSS
-  - [ ] 安装 Tailwind CSS v4 及相关依赖
-  - [ ] 配置 tailwind 和全局样式文件
-- [ ] Task 4: 集成 shadcn 并自定义主题
-  - [ ] 运行 npx shadcn@latest init 初始化 shadcn
-  - [ ] 配置抹茶绿/荧光绿主题色（CSS 变量）
-  - [ ] 配置暗黑/白天模式切换
-  - [ ] 添加基础 shadcn 组件（Button、Card 等）
+- [x] Task 3: 集成 Tailwind CSS
+  - [x] 安装 Tailwind CSS v4 及 @tailwindcss/vite
+  - [x] 配置 tailwind 和全局样式文件
+- [x] Task 4: 集成 shadcn 并自定义主题
+  - [x] 初始化 shadcn（components.json + utils.ts + 依赖）
+  - [x] 配置抹茶绿/荧光绿主题色（CSS 变量，oklch 色彩空间）
+  - [x] 配置暗黑/白天模式切换（ThemeProvider + ThemeToggle + +Wrapper）
+  - [x] 添加基础 shadcn 组件（Button、Card、Badge、Separator、Skeleton）
 
 ## Phase 4: 布局与导航
 - [ ] Task 5: 创建全局布局组件

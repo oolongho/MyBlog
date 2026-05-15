@@ -10,8 +10,14 @@
     "preview": "vike preview"
   },
   "dependencies": {
+    "@base-ui/react": "^1.4.1",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^1.16.0",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
+    "shadcn": "^4.7.0",
+    "tailwind-merge": "^3.6.0",
     "vike": "^0.4.259",
     "vike-react": "^0.6.22"
   },
