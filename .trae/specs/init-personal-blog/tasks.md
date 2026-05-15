@@ -52,10 +52,10 @@
   - [x] 添加 3 篇示例 Markdown 文章（含各种 frontmatter 组合）
 
 ## Phase 7: 首页
-- [ ] Task 9: 实现首页文章列表
-  - [ ] 创建 ArticleCard 组件（标题、日期、标签、摘要）
-  - [ ] 实现文章列表布局（按日期倒序）
-  - [ ] 实现分页功能
+- [x] Task 9: 实现首页文章列表
+  - [x] 创建 ArticleCard 组件（标题、日期、标签、摘要、系列）
+  - [x] 实现文章列表布局（按日期倒序）
+  - [x] 实现分页功能（Pagination 组件）
 
 ## Phase 8: 文章详情页
 - [ ] Task 10: 实现 Markdown 渲染

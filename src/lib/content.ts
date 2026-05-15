@@ -13,6 +13,12 @@ function getMdFiles(dir: string): string[] {
     .map((f) => path.join(dir, f))
 }
 
+function formatDate(d: unknown): string {
+  if (!d) return ''
+  if (d instanceof Date) return d.toISOString().slice(0, 10)
+  return String(d)
+}
+
 function parseFile(filePath: string): PostData {
   const raw = fs.readFileSync(filePath, 'utf-8')
   const { data, content } = matter(raw)
@@ -20,12 +26,12 @@ function parseFile(filePath: string): PostData {
   return {
     slug,
     title: data.title ?? slug,
-    date: String(data.date ?? ''),
+    date: formatDate(data.date),
     tags: data.tags ?? [],
-    series: data.series,
-    seriesOrder: data.seriesOrder,
-    excerpt: data.excerpt,
-    cover: data.cover,
+    series: data.series || undefined,
+    seriesOrder: data.seriesOrder || undefined,
+    excerpt: data.excerpt || undefined,
+    cover: data.cover || undefined,
     content,
   }
 }
@@ -35,7 +41,13 @@ export function getAllPosts(): PostData[] {
 }
 
 export function getAllPostsMeta(): PostMeta[] {
-  return getAllPosts().map(({ content, ...meta }) => meta)
+  return getAllPosts().map(({ content, ...meta }) => {
+    const cleaned: Record<string, unknown> = {}
+    for (const [k, v] of Object.entries(meta)) {
+      if (v !== undefined) cleaned[k] = v
+    }
+    return cleaned as PostMeta
+  })
 }
 
 export function getPostBySlug(slug: string): PostData | undefined {
