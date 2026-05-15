@@ -1,3 +1,6 @@
+import { useState } from 'react'
+import { MenuIcon, XIcon } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { ThemeToggle } from '@/components/theme-toggle'
 
 const navItems = [
@@ -37,10 +40,6 @@ export function Header() {
     </header>
   )
 }
-
-import { useState } from 'react'
-import { MenuIcon, XIcon } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 
 function MobileNav({ items }: { items: { label: string; href: string }[] }) {
   const [open, setOpen] = useState(false)

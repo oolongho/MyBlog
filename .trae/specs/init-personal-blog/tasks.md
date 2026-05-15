@@ -41,14 +41,15 @@
   - [x] 管理面板 `/admin`（+config.ts prerender: false）
 
 ## Phase 6: 内容系统
-- [ ] Task 7: 实现 Markdown 内容加载
-  - [ ] 定义 frontmatter 类型（title, date, tags, series, excerpt, cover）
-  - [ ] 创建构建时内容收集脚本（读取 content/posts/ 下所有 .md 文件）
-  - [ ] 解析 frontmatter 和 Markdown 内容
-  - [ ] 生成内容清单（manifest）供页面使用
-- [ ] Task 8: 创建示例内容
-  - [ ] 创建 content/posts/ 目录
-  - [ ] 添加 2-3 篇示例 Markdown 文章（含各种 frontmatter 组合）
+- [x] Task 7: 实现 Markdown 内容加载
+  - [x] 定义 frontmatter 类型（PostFrontmatter, PostMeta, PostData）
+  - [x] 创建构建时内容收集脚本（src/lib/content.ts，gray-matter 解析）
+  - [x] 解析 frontmatter 和 Markdown 内容
+  - [x] 生成内容清单供页面使用（+data.ts 注入数据）
+  - [x] 配置动态路由预渲染（+onBeforePrerenderStart.ts）
+- [x] Task 8: 创建示例内容
+  - [x] 创建 content/posts/ 目录
+  - [x] 添加 3 篇示例 Markdown 文章（含各种 frontmatter 组合）
 
 ## Phase 7: 首页
 - [ ] Task 9: 实现首页文章列表
