@@ -24,11 +24,11 @@
   - [x] 添加基础 shadcn 组件（Button、Card、Badge、Separator、Skeleton）
 
 ## Phase 4: 布局与导航
-- [ ] Task 5: 创建全局布局组件
-  - [ ] 创建 Header 组件（导航栏、主题切换、头像）
-  - [ ] 创建 Footer 组件
-  - [ ] 创建 Layout 组件（Header + Content + Footer）
-  - [ ] 实现暗黑/白天模式切换逻辑
+- [x] Task 5: 创建全局布局组件
+  - [x] 创建 Header 组件（导航栏、主题切换、头像、移动端菜单）
+  - [x] 创建 Footer 组件
+  - [x] 创建 Layout 组件（Header + Content + Footer）+Layout.tsx
+  - [x] 实现暗黑/白天模式切换逻辑（ThemeProvider + ThemeToggle + +Wrapper）
 
 ## Phase 5: 路由与页面骨架
 - [ ] Task 6: 创建所有页面路由
