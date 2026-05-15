@@ -31,15 +31,14 @@
   - [x] 实现暗黑/白天模式切换逻辑（ThemeProvider + ThemeToggle + +Wrapper）
 
 ## Phase 5: 路由与页面骨架
-- [ ] Task 6: 创建所有页面路由
-  - [ ] 首页 `/`（index.tsx）
-  - [ ] 文章详情 `/posts/:slug`
-  - [ ] 归档 `/archive`
-  - [ ] 友链 `/friends`
-  - [ ] 说说 `/moments`
-  - [ ] 关于 `/about`
-  - [ ] 管理面板 `/admin`
-  - [ ] 为每个页面创建基础骨架组件
+- [x] Task 6: 创建所有页面路由
+  - [x] 首页 `/`（index/+Page.tsx）
+  - [x] 文章详情 `/posts/@slug`（+config.ts prerender: false）
+  - [x] 归档 `/archive`
+  - [x] 友链 `/friends`
+  - [x] 说说 `/moments`
+  - [x] 关于 `/about`
+  - [x] 管理面板 `/admin`（+config.ts prerender: false）
 
 ## Phase 6: 内容系统
 - [ ] Task 7: 实现 Markdown 内容加载
