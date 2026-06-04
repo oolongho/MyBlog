@@ -32,7 +32,6 @@ export default function Page() {
             onClick={() => {
               setActiveTag(activeTag === tag ? null : tag)
               setActiveSeries(null)
-              setPage(1)
             }}
           >
             {tag} ({count})
@@ -48,10 +47,9 @@ export default function Page() {
               variant={activeSeries === s ? 'default' : 'outline'}
               className="cursor-pointer text-xs"
               onClick={() => {
-                setActiveSeries(activeSeries === s ? null : s)
-                setActiveTag(null)
-                setPage(1)
-              }}
+              setActiveSeries(activeSeries === s ? null : s)
+              setActiveTag(null)
+            }}
             >
               {s} ({count})
             </Badge>
