@@ -5,9 +5,9 @@ import { ThemeToggle } from '@/components/theme-toggle'
 
 const navItems = [
   { label: '首页', href: '/' },
-  { label: '归档', href: '/archive' },
-  { label: '友链', href: '/friends' },
+  { label: '文章', href: '/posts' },
   { label: '说说', href: '/moments' },
+  { label: '友链', href: '/friends' },
   { label: '关于', href: '/about' },
 ]
 

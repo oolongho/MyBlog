@@ -36,8 +36,16 @@ function parseFile(filePath: string): PostData {
   }
 }
 
+let _postsCache: PostData[] | null = null
+
 export function getAllPosts(): PostData[] {
-  return getMdFiles(CONTENT_DIR).map(parseFile).sort((a, b) => b.date.localeCompare(a.date))
+  if (_postsCache) return _postsCache
+  _postsCache = getMdFiles(CONTENT_DIR).map(parseFile).sort((a, b) => b.date.localeCompare(a.date))
+  return _postsCache
+}
+
+export function clearCache(): void {
+  _postsCache = null
 }
 
 export function getAllPostsMeta(): PostMeta[] {

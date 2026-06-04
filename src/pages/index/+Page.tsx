@@ -1,16 +1,12 @@
 import { useData } from 'vike-react/useData'
-import { useState } from 'react'
 import { ArticleCard } from '@/components/article-card'
 import { Pagination } from '@/components/pagination'
+import { usePagination } from '@/hooks/usePagination'
 import type { Data } from './+data'
-
-const PAGE_SIZE = 10
 
 export default function Page() {
   const { posts } = useData<Data>()
-  const [page, setPage] = useState(1)
-  const totalPages = Math.ceil(posts.length / PAGE_SIZE)
-  const paged = posts.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+  const { page, setPage, totalPages, pagedItems } = usePagination(posts)
 
   return (
     <div>
@@ -20,7 +16,7 @@ export default function Page() {
       </div>
 
       <div className="flex flex-col gap-3">
-        {paged.map((post) => (
+        {pagedItems.map((post) => (
           <ArticleCard key={post.slug} post={post} />
         ))}
       </div>
