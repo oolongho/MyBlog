@@ -1,22 +1,19 @@
-import { MoonIcon, SunIcon, MonitorIcon } from 'lucide-react'
+import { MoonIcon, SunIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useTheme } from '@/components/theme-provider'
 
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme()
-
-  const next = theme === 'light' ? 'dark' : theme === 'dark' ? 'system' : 'light'
+  const isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
 
   return (
     <Button
       variant="ghost"
       size="icon-sm"
-      onClick={() => setTheme(next)}
-      aria-label={`切换主题，当前: ${theme}`}
+      onClick={() => setTheme(isDark ? 'light' : 'dark')}
+      aria-label={`切换主题，当前: ${isDark ? '暗黑' : '明亮'}`}
     >
-      {theme === 'light' && <SunIcon />}
-      {theme === 'dark' && <MoonIcon />}
-      {theme === 'system' && <MonitorIcon />}
+      {isDark ? <MoonIcon /> : <SunIcon />}
     </Button>
   )
 }
